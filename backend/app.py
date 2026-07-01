@@ -702,7 +702,25 @@ def assistant():
     def fmt_patient(p):
         flag = p.get("patient_flag", "")
         age = p.get("age")
-        tl = [e.get("note","") or e.get("esi","") for e in p.get("history", [])]
+        history = p.get("history", [])
+
+        # Doctor-written condition log entries (the "timeline" feature)
+        condition_notes = [
+            f"[{e.get('timestamp','?')}] {e.get('note','')}"
+            for e in history
+            if e.get("type") == "condition_log" and e.get("note")
+        ]
+
+        # AI re-triage snapshots (ESI changes over time)
+        esi_history = [
+            e.get("esi", "")
+            for e in history
+            if e.get("type") != "condition_log" and e.get("esi")
+        ]
+
+        timeline_text = "\n".join(f"  - {n}" for n in condition_notes) if condition_notes else "  none logged"
+        esi_history_text = " -> ".join(esi_history) if esi_history else "none"
+
         return f"""
 Name: {p['name']}{f' (Age: {age})' if age else ''}
 Status: {p['status']}{f' | FLAG: {flag.upper()}' if flag else ''}
@@ -711,7 +729,9 @@ Waiting: {p.get('waiting_minutes', 0)} minutes
 Symptoms: {p['symptoms']}
 ESI: {p['result'].get('esi','')} | Confidence: {p['result'].get('confidence','')}
 Rationale: {p['result'].get('rationale','')}
-Timeline entries: {'; '.join(tl[-5:]) if tl else 'none'}
+ESI history: {esi_history_text}
+Doctor's Timeline Notes:
+{timeline_text}
 Treatment Notes: {p.get('treatment_notes','none')}
 """
 
