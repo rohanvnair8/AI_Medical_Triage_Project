@@ -644,10 +644,11 @@ def analytics():
     average_confidence = total_confidence / len(patient_queue) if patient_queue else 0
     average_treatment = treatment_minutes / len(active_beds) if active_beds else 0
 
-    discharged = sum(
-        1 for event in audit_log
-        if event.get("action") == "Discharged"
-    )
+    conn = get_db()
+    discharged = conn.execute(
+        "SELECT COUNT(*) FROM patients WHERE status='Discharged'"
+    ).fetchone()[0]
+    conn.close()
 
     return jsonify({
         "patients_waiting": len(patient_queue),
@@ -658,7 +659,6 @@ def analytics():
         "average_confidence": round(average_confidence, 2),
         "average_treatment_minutes": round(average_treatment, 1),
         "patients_discharged": discharged,
-        "highest_priority": highest_priority,
         "languages": language_counts,
         "esi_distribution": esi_counts
     })
