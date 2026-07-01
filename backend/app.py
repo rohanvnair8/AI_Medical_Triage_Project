@@ -603,7 +603,9 @@ def analytics():
     oldest_wait = 0
     highest_priority = None
 
-    for patient in patient_queue:
+    all_patients = patient_queue + active_beds
+
+    for patient in all_patients:
         language = patient["language"] or "Unknown"
         language_counts[language] = language_counts.get(language, 0) + 1
 
@@ -614,12 +616,13 @@ def analytics():
         if esi in ["ESI-1", "ESI-2"]:
             critical_cases += 1
 
+        total_confidence += patient["result"].get("confidence", 0)
+
+    for patient in patient_queue:
         wait = patient.get("waiting_minutes", 0)
         total_wait += wait
         if wait > oldest_wait:
             oldest_wait = wait
-
-        total_confidence += patient["result"].get("confidence", 0)
 
     if patient_queue:
         sort_queue()
@@ -641,7 +644,7 @@ def analytics():
                 pass
 
     average_wait = total_wait / len(patient_queue) if patient_queue else 0
-    average_confidence = total_confidence / len(patient_queue) if patient_queue else 0
+    average_confidence = total_confidence / len(all_patients) if all_patients else 0
     average_treatment = treatment_minutes / len(active_beds) if active_beds else 0
 
     conn = get_db()
