@@ -1,0 +1,2275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MedAI Triage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   CSS VARIABLES
+============================================================ */
+:root {
+  --a1: #3b82f6; --a2: #7c3aed; --a3: #06b6d4;
+  --bg: #020617; --bg2: #0f172a;
+  --b1: #3b82f6; --b2: #2563eb;
+  --font-heading: 'Sora', 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  /* semantic surface/text vars (mode-driven) */
+  --text-main:   white;
+  --text-soft:   #e2e8f0;
+  --text-muted:  #94a3b8;
+  --text-faint:  #64748b;
+  --text-dim:    #475569;
+  --text-dimmer: #334155;
+  --text-dimmest:#0f172a;
+
+  --surface:        rgba(255,255,255,.055);
+  --surface-strong: rgba(255,255,255,.10);
+  --surface-soft:    rgba(255,255,255,.05);
+  --border-soft:     rgba(255,255,255,.09);
+  --border-strong:   rgba(255,255,255,.14);
+
+  --modal-bg: #0f172a;
+  --panel-bg: #0c1526;
+  --fab-bg:   #111827;
+  --blob-opacity: .55;
+}
+
+/* ============================================================
+   RESET
+============================================================ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family: var(--font-body);
+  color: var(--text-main);
+  background: var(--bg);
+  min-height: 100vh;
+  overflow-x: hidden;
+  transition: background .4s ease, color .4s ease;
+}
+
+/* ============================================================
+   PARALLAX BLOBS (shared)
+============================================================ */
+.blob {
+  position: fixed; border-radius: 50%;
+  filter: blur(110px); opacity: var(--blob-opacity, .55); z-index: 0;
+  pointer-events: none; will-change: transform;
+  transition: transform .05s linear, opacity .4s ease;
+}
+.blob1 { width:460px; height:460px; background:var(--a1); left:-160px; top:-160px; }
+.blob2 { width:560px; height:560px; background:var(--a2); right:-180px; bottom:-180px; }
+.blob3 { width:360px; height:360px; background:var(--a3); top:40%; left:38%; }
+.blob4 { width:300px; height:300px; background:var(--a1); top:75%; right:8%; }
+.blob5 { width:260px; height:260px; background:var(--a2); top:8%; left:55%; }
+
+/* ============================================================
+   LANDING PAGE
+============================================================ */
+#landing {
+  position: fixed; inset:0; z-index:500;
+  display: flex; flex-direction:column;
+  align-items: center; justify-content: center;
+  overflow: hidden;
+}
+
+.landing-bg {
+  position: absolute; inset:0; z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59,130,246,.35) 0%, transparent 60%),
+    radial-gradient(ellipse 70% 50% at 80% 80%, rgba(124,58,237,.35) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 50% 10%, rgba(6,182,212,.2) 0%, transparent 50%),
+    #020617;
+}
+
+/* animated mesh grid */
+.landing-grid {
+  position: absolute; inset:0; z-index:1; opacity:.08;
+  background-image:
+    linear-gradient(rgba(255,255,255,.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,.15) 1px, transparent 1px);
+  background-size: 60px 60px;
+  animation: gridShift 20s linear infinite;
+}
+@keyframes gridShift { 0%{background-position:0 0} 100%{background-position:60px 60px} }
+
+/* faint flowing/typing source-code backdrop, sits deep behind landing content */
+.code-rain {
+  position: absolute; inset:0; z-index:1;
+  overflow: hidden;
+  pointer-events: none;
+  -webkit-mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, transparent 30%, black 85%);
+  mask-image: radial-gradient(ellipse 70% 65% at 50% 45%, transparent 30%, black 85%);
+}
+
+.code-column {
+  position: absolute;
+  top: -10%;
+  font-family: 'Courier New', monospace;
+  font-size: 10px;
+  line-height: 1.7;
+  white-space: pre;
+  color: var(--a1);
+  opacity: .16;
+  animation: codeDrift linear infinite;
+  text-shadow: 0 0 8px currentColor;
+}
+
+@keyframes codeDrift {
+  0%   { transform: translateY(-5%); }
+  100% { transform: translateY(115%); }
+}
+
+.code-cursor {
+  display: inline-block;
+  width: 6px; height: 10px;
+  background: currentColor;
+  margin-left: 1px;
+  animation: codeCursorBlink 1s step-end infinite;
+}
+@keyframes codeCursorBlink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* floating orbs */
+.orb {
+  position: absolute; border-radius:50%;
+  filter: blur(60px); opacity:.5; z-index:1;
+  animation: float 8s ease-in-out infinite;
+}
+.orb1 { width:200px;height:200px; background:var(--a1); top:15%; left:10%; animation-delay:0s; }
+.orb2 { width:160px;height:160px; background:var(--a2); top:60%; left:75%; animation-delay:-3s; }
+.orb3 { width:120px;height:120px; background:var(--a3); top:30%; left:65%; animation-delay:-5s; }
+.orb4 { width:100px;height:100px; background:var(--a1); top:70%; left:20%; animation-delay:-2s; }
+
+@keyframes float {
+  0%,100% { transform:translateY(0) scale(1); }
+  50%      { transform:translateY(-30px) scale(1.08); }
+}
+
+.landing-content {
+  position: relative; z-index:10;
+  text-align: center; padding: 40px 24px;
+  max-width: 700px;
+}
+
+.landing-badge {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.15);
+  font-size: 13px; font-weight:600; letter-spacing:.08em;
+  color: rgba(255,255,255,.7);
+  margin-bottom: 32px;
+  animation: fadeUp .8s ease both;
+}
+
+.landing-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2.8rem, 8vw, 5.5rem);
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -.02em;
+  margin-bottom: 24px;
+  animation: fadeUp .8s .1s ease both;
+}
+
+.landing-title .grad {
+  background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,.6) 40%, var(--a1) 70%, var(--a2) 100%);
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.landing-sub {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: rgba(255,255,255,.55);
+  line-height: 1.6;
+  margin-bottom: 48px;
+  animation: fadeUp .8s .2s ease both;
+}
+
+.landing-enter {
+  display: inline-flex; align-items: center; gap: 12px;
+  padding: 18px 44px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--b1), var(--b2));
+  border: none; color: white;
+  font-family: var(--font-heading); font-size: 1.1rem; font-weight: 700;
+  cursor: pointer; letter-spacing: .01em;
+  box-shadow: 0 0 60px rgba(59,130,246,.4), 0 20px 40px rgba(0,0,0,.4);
+  animation: fadeUp .8s .3s ease both;
+  transition: .3s;
+  position: relative; overflow: hidden;
+}
+.landing-enter::before {
+  content:''; position:absolute; inset:0;
+  background: linear-gradient(135deg, rgba(255,255,255,.2), transparent);
+  opacity:0; transition:.3s;
+}
+.landing-enter:hover { transform:translateY(-3px) scale(1.03); box-shadow:0 0 80px rgba(59,130,246,.55), 0 25px 50px rgba(0,0,0,.5); }
+.landing-enter:hover::before { opacity:1; }
+
+.landing-stats {
+  display: flex; gap:40px; justify-content:center; margin-top:56px;
+  animation: fadeUp .8s .4s ease both;
+}
+.ls-item { text-align:center; }
+.ls-num  { font-family:var(--font-heading); font-size:1.8rem; font-weight:800; color:white; }
+.ls-label{ font-size:12px; color:rgba(255,255,255,.4); letter-spacing:.06em; text-transform:uppercase; margin-top:4px; }
+
+@keyframes fadeUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+
+/* particles */
+.particle {
+  position:absolute; width:3px; height:3px; border-radius:50%;
+  background:rgba(255,255,255,.6); z-index:2; pointer-events:none;
+  animation: rise linear infinite;
+}
+@keyframes rise { 0%{opacity:0;transform:translateY(0)} 10%{opacity:1} 90%{opacity:.4} 100%{opacity:0;transform:translateY(-80vh)} }
+
+/* landing theme pickers */
+.landing-themes {
+  display:flex; gap:10px; justify-content:center; margin-top:28px;
+  animation: fadeUp .8s .5s ease both;
+}
+.lt-swatch {
+  width:28px; height:28px; border-radius:50%; cursor:pointer;
+  border:2px solid transparent; transition:.2s;
+}
+.lt-swatch:hover { transform:scale(1.2); border-color:rgba(255,255,255,.6); }
+
+/* ============================================================
+   MAIN APP (hidden until enter)
+============================================================ */
+#app {
+  display: none;
+  position: relative; z-index: 10;
+  padding: 40px;
+  min-height: 100vh;
+}
+#app.visible { display: block; }
+
+.container { max-width: 1280px; margin: auto; }
+
+/* ============================================================
+   APP HEADER
+============================================================ */
+.app-header {
+  display: flex; align-items:center; justify-content:space-between;
+  margin-bottom: 36px; flex-wrap: wrap; gap:16px;
+}
+.app-logo {
+  font-family: var(--font-heading);
+  font-size: 1.6rem; font-weight: 800; letter-spacing:-.02em;
+  background: linear-gradient(135deg, white, var(--a1));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.app-logo span { -webkit-text-fill-color: transparent; }
+
+/* ============================================================
+   CRITICAL BANNER
+============================================================ */
+#criticalBanner {
+  display:none;
+  background:rgba(220,38,38,.2); border:1px solid rgba(220,38,38,.5);
+  border-radius:14px; padding:14px 22px; margin-bottom:22px;
+  color:#fecaca; font-weight:600; font-size:.95rem;
+  animation: pulse 1.8s infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.6} }
+
+/* ============================================================
+   GLASS
+============================================================ */
+.glass {
+  background: var(--surface);
+  backdrop-filter: blur(26px) saturate(140%);
+  -webkit-backdrop-filter: blur(26px) saturate(140%);
+  border: 1px solid var(--surface-strong);
+  border-radius: 22px; padding: 28px; margin-bottom:26px;
+  box-shadow:
+    0 8px 40px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.18),
+    inset 0 -1px 0 rgba(255,255,255,.04);
+  transition: transform .3s, box-shadow .3s, background .4s ease, border-color .4s ease;
+  position: relative; z-index:1;
+  overflow: hidden;
+}
+
+/* iPhone-glass style refraction rim: a soft conic sheen sitting just inside the border */
+.glass::before {
+  content: '';
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from 200deg,
+    rgba(255,255,255,.45) 0deg,
+    rgba(255,255,255,.02) 70deg,
+    rgba(255,255,255,.02) 200deg,
+    rgba(255,255,255,.28) 260deg,
+    rgba(255,255,255,.02) 320deg,
+    rgba(255,255,255,.45) 360deg
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: .55;
+  z-index: 0;
+}
+
+/* faint diagonal highlight sweep, like light catching curved glass */
+.glass::after {
+  content: '';
+  position: absolute; top:-40%; left:-20%;
+  width: 70%; height: 180%;
+  background: linear-gradient(115deg, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 38%);
+  transform: rotate(8deg);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.glass:hover { transform:translateY(-3px); box-shadow:0 16px 56px rgba(0,0,0,.38), inset 0 1px 0 rgba(255,255,255,.22), inset 0 -1px 0 rgba(255,255,255,.05); }
+
+/* ============================================================
+   TABS
+============================================================ */
+.tabBar { display:flex; gap:8px; margin-bottom:22px; flex-wrap:wrap; }
+.tab {
+  padding:9px 18px; border-radius:999px; cursor:pointer;
+  background:var(--surface-soft); border:1px solid var(--border-soft);
+  color:var(--text-muted); font-weight:600; font-size:13px;
+  transition:.22s;
+}
+.tab:hover { color:var(--text-main); background:var(--surface); }
+.tab.active {
+  background:rgba(59,130,246,.25); border-color:rgba(59,130,246,.5);
+  color:#eff6ff;
+}
+.tabPanel { display:none; }
+.tabPanel.active { display:block; }
+
+/* ============================================================
+   TYPOGRAPHY
+============================================================ */
+h2 { font-family:var(--font-heading); font-size:1.35rem; font-weight:700; margin-bottom:18px; color:var(--text-main); }
+h3 { font-family:var(--font-heading); font-size:1rem; font-weight:600; margin-top:18px; margin-bottom:8px; color:var(--a1); }
+p  { line-height:1.7; color:var(--text-soft); font-size:.95rem; }
+hr { border:none; height:1px; background:var(--border-soft); margin:22px 0; }
+label { display:block; margin-top:18px; margin-bottom:7px; font-weight:600; font-size:.88rem; color:var(--text-soft); letter-spacing:.02em; }
+
+/* ============================================================
+   INPUTS
+============================================================ */
+input, textarea, select {
+  width:100%; padding:13px 16px;
+  border-radius:14px;
+  background:var(--surface-soft);
+  color:var(--text-main); border:1px solid var(--border-soft);
+  outline:none; font-size:14px; font-family:var(--font-body);
+  transition:.28s;
+}
+input::placeholder, textarea::placeholder { color:var(--text-faint); }
+input:focus, textarea:focus {
+  border-color:var(--a1);
+  box-shadow:0 0 20px rgba(59,130,246,.25);
+}
+select option { background:#1e293b; }
+textarea { resize:vertical; min-height:140px; }
+
+/* language autocomplete */
+.lang-wrap { position:relative; }
+.lang-dropdown {
+  position:absolute; top:calc(100% + 6px); left:0; right:0;
+  background:#1e293b; border:1px solid rgba(255,255,255,.12);
+  border-radius:14px; z-index:50; max-height:220px; overflow-y:auto;
+  box-shadow:0 12px 40px rgba(0,0,0,.5);
+  display:none;
+}
+.lang-dropdown.open { display:block; }
+.lang-opt {
+  padding:10px 16px; cursor:pointer; font-size:14px; transition:.15s;
+}
+.lang-opt:hover { background:rgba(255,255,255,.08); }
+.lang-opt .lang-flag { margin-right:8px; }
+
+/* ============================================================
+   BUTTONS
+============================================================ */
+.buttonRow { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+button {
+  border:none; border-radius:16px; padding:12px 22px;
+  background:linear-gradient(135deg, var(--b1), var(--b2));
+  color:white; font-weight:600; cursor:pointer;
+  transition:.26s; font-size:13.5px; font-family:var(--font-body);
+}
+button:hover { transform:translateY(-2px); box-shadow:0 8px 22px rgba(59,130,246,.35); }
+button:active { transform:translateY(0); }
+.btn-red    { background:linear-gradient(135deg,#ef4444,#dc2626); }
+.btn-red:hover { box-shadow:0 8px 22px rgba(239,68,68,.35); }
+.btn-green  { background:linear-gradient(135deg,#22c55e,#16a34a); }
+.btn-green:hover { box-shadow:0 8px 22px rgba(34,197,94,.35); }
+.btn-orange { background:linear-gradient(135deg,#f97316,#ea580c); }
+.btn-orange:hover { box-shadow:0 8px 22px rgba(249,115,22,.35); }
+.btn-purple { background:linear-gradient(135deg,#a855f7,#7c3aed); }
+.btn-purple:hover { box-shadow:0 8px 22px rgba(168,85,247,.35); }
+.btn-gray   { background:linear-gradient(135deg,#475569,#334155); }
+.btn-gray:hover { box-shadow:0 8px 22px rgba(71,85,105,.35); }
+.btn-sm { padding:7px 14px; font-size:12.5px; border-radius:11px; }
+
+/* ============================================================
+   STATUS
+============================================================ */
+#status, #voiceStatus { margin-top:13px; font-weight:600; font-size:.9rem; }
+.loading { color:#fbbf24; } .success { color:#22c55e; } .error { color:#ef4444; }
+
+/* ============================================================
+   BADGES
+============================================================ */
+.badge {
+  display:inline-block; padding:5px 11px; margin:3px;
+  border-radius:999px; font-size:12px; font-weight:600;
+  border:1px solid rgba(255,255,255,.1);
+}
+.esi1{background:#7f1d1d;color:white} .esi2{background:#dc2626;color:white}
+.esi3{background:#ea580c;color:white} .esi4{background:#ca8a04;color:white} .esi5{background:#16a34a;color:white}
+.tag    {background:rgba(34,197,94,.18);color:#bbf7d0}
+.warning{background:rgba(239,68,68,.18);color:#fecaca}
+.info   {background:rgba(96,165,250,.18);color:#bfdbfe}
+.flag-priority{background:rgba(239,68,68,.3);color:#fca5a5;border-color:rgba(239,68,68,.4)}
+.flag-extended{background:rgba(251,191,36,.2);color:#fde68a;border-color:rgba(251,191,36,.3)}
+.flag-deceased{background:rgba(100,116,139,.3);color:#cbd5e1;border-color:rgba(100,116,139,.4)}
+
+/* ============================================================
+   INFO GRID
+============================================================ */
+.infoGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:18px; }
+.infoCard {
+  background:var(--surface-soft); border:1px solid var(--border-soft);
+  border-radius:16px; padding:16px; transition:.26s;
+}
+.infoCard:hover { transform:translateY(-2px); background:var(--surface); }
+
+/* ============================================================
+   ANALYTICS
+============================================================ */
+.analyticsGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-top:18px; }
+.analyticsCard {
+  background:var(--surface-soft); border:1px solid var(--border-soft);
+  border-radius:16px; padding:18px; min-height:110px; transition:.26s;
+}
+.analyticsCard:hover { transform:translateY(-2px); background:var(--surface); }
+.big-number { font-family:var(--font-heading); font-size:2.4rem; font-weight:800; color:var(--a1); line-height:1.1; margin-top:6px; }
+
+/* ============================================================
+   SECTION HEADER
+============================================================ */
+.sectionHeader { display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:12px; }
+
+/* ============================================================
+   QUEUE & BEDS
+============================================================ */
+#queue, #beds { display:flex; flex-direction:column; gap:12px; }
+.queueCard {
+  background:var(--surface-soft); border-radius:16px; padding:16px;
+  border-left:5px solid var(--a1); transition:.26s; cursor:pointer;
+}
+.queueCard.esi-critical { border-left-color:#dc2626; }
+.queueCard.esi-urgent   { border-left-color:#f97316; }
+.queueCard:hover { transform:translateX(4px); background:var(--surface); }
+.bedCard {
+  background:rgba(34,197,94,.09); border-left:5px solid #22c55e;
+  padding:16px; border-radius:16px; transition:.26s; cursor:pointer;
+}
+.bedCard:hover { background:rgba(34,197,94,.14); }
+.queueHeader { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; margin-bottom:8px; gap:8px; }
+.patientName { font-family:var(--font-heading); font-size:16px; font-weight:700; }
+.patientInfo { color:var(--text-muted); margin-top:4px; font-size:13px; }
+
+/* ============================================================
+   SYMPTOM ICONS
+============================================================ */
+.symptomGrid { display:grid; grid-template-columns:repeat(auto-fit,minmax(110px,1fr)); gap:14px; margin-top:18px; }
+.symptomCard {
+  background:var(--surface-soft); border:1px solid var(--border-soft);
+  border-radius:18px; padding:16px; text-align:center; cursor:pointer; transition:.26s;
+}
+.symptomCard:hover { transform:scale(1.05); background:rgba(59,130,246,.2); }
+.symptomCard.selected { background:rgba(59,130,246,.3); border-color:rgba(96,165,250,.6); }
+.symptomEmoji { font-size:38px; margin-bottom:10px; }
+
+/* ============================================================
+   CHAT
+============================================================ */
+#chatMessages {
+  display:flex; flex-direction:column; gap:12px;
+  max-height:420px; overflow-y:auto; margin-bottom:14px; padding-right:4px;
+}
+.chatBubble {
+  padding:12px 16px; border-radius:16px; max-width:88%;
+  line-height:1.6; font-size:13.5px; white-space:pre-wrap;
+}
+.chatBubble.user {
+  background:rgba(59,130,246,.22); border:1px solid rgba(59,130,246,.3);
+  align-self:flex-end;
+}
+.chatBubble.bot {
+  background:var(--surface); border:1px solid var(--border-soft);
+  align-self:flex-start;
+}
+
+/* ============================================================
+   MODAL
+============================================================ */
+.modal-backdrop {
+  display:none; position:fixed; inset:0;
+  background:rgba(0,0,0,.65); backdrop-filter:blur(8px);
+  z-index:300; align-items:center; justify-content:center;
+}
+.modal-backdrop.open { display:flex; }
+.modal {
+  background:var(--modal-bg); border:1px solid var(--border-strong);
+  border-radius:22px; padding:30px; width:100%; max-width:520px;
+  max-height:88vh; overflow-y:auto;
+  box-shadow:0 30px 80px rgba(0,0,0,.6);
+}
+.modal h2 { margin-bottom:14px; }
+.modal-actions { display:flex; gap:10px; margin-top:18px; justify-content:flex-end; flex-wrap:wrap; }
+
+/* ============================================================
+   PATIENT DETAIL PANEL
+============================================================ */
+#patientPanel {
+  position:fixed; inset:0; z-index:250;
+  background:rgba(0,0,0,.7); backdrop-filter:blur(10px);
+  display:none; align-items:flex-start; justify-content:center;
+  overflow-y:auto; padding:36px 20px;
+}
+#patientPanel.open { display:flex; }
+.patientPanelInner {
+  background:var(--panel-bg); border:1px solid var(--border-soft);
+  border-radius:26px; padding:34px; width:100%; max-width:700px;
+  position:relative;
+}
+.panelClose {
+  position:absolute; top:18px; right:18px;
+  background:var(--surface-soft); border:none; color:var(--text-main);
+  width:34px; height:34px; border-radius:50%; font-size:16px;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; padding:0;
+}
+.panelClose:hover { background:rgba(255,255,255,.14); }
+
+/* timeline track */
+.timelineTrack { position:relative; padding-left:26px; margin-top:16px; }
+.timelineTrack::before {
+  content:''; position:absolute; left:9px; top:0; bottom:0;
+  width:2px; background:var(--border-strong);
+}
+.tlEntry {
+  position:relative; margin-bottom:16px;
+  background:var(--surface-soft); border-radius:13px; padding:13px 15px;
+}
+.tlEntry::before {
+  content:''; position:absolute; left:-21px; top:16px;
+  width:11px; height:11px; border-radius:50%;
+  background:var(--a1); border:2px solid #0c1526;
+}
+.tlEntry.triage-entry::before   { background:#f97316; }
+.tlEntry.condition-entry::before{ background:#22c55e; }
+.tlEntry.flag-entry::before     { background:#a855f7; }
+.tlTime  { font-size:11px; color:var(--text-dim); margin-bottom:3px; }
+.tlBody  { font-size:13.5px; color:var(--text-soft); line-height:1.5; }
+
+.conditionLogForm {
+  background:var(--surface-soft); border:1px solid var(--border-soft);
+  border-radius:14px; padding:18px; margin-top:20px;
+}
+
+/* flag buttons */
+.flagBtns { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.flag-btn {
+  padding:7px 14px; border-radius:10px; font-size:12px; font-weight:700;
+  border:none; cursor:pointer; transition:.2s; opacity:.75;
+}
+.flag-btn:hover { opacity:1; transform:scale(1.05); }
+.flag-btn.active { opacity:1; box-shadow:0 0 14px rgba(255,255,255,.3); }
+.fb-priority { background:rgba(239,68,68,.3);  color:#fca5a5; }
+.fb-extended { background:rgba(251,191,36,.2); color:#fde68a; }
+.fb-deceased { background:rgba(100,116,139,.3);color:#cbd5e1; }
+.fb-clear    { background:rgba(255,255,255,.07);color:var(--text-muted); }
+
+/* ============================================================
+   THEME FAB
+============================================================ */
+#themeFab {
+  position:fixed; bottom:26px; right:26px; z-index:400;
+  width:50px; height:50px; border-radius:50%;
+  background:linear-gradient(135deg, var(--a1), var(--a2));
+  border:none; font-size:20px; cursor:pointer;
+  box-shadow:0 6px 22px rgba(0,0,0,.5);
+  display:flex; align-items:center; justify-content:center;
+  transition:.28s;
+}
+#themeFab:hover { transform:scale(1.1) rotate(25deg); }
+
+#themePanel {
+  position:fixed; bottom:88px; right:26px; width:300px;
+  background:var(--fab-bg); border:1px solid var(--border-strong);
+  border-radius:18px; padding:22px; z-index:400;
+  box-shadow:0 20px 60px rgba(0,0,0,.6); display:none;
+  max-height:80vh; overflow-y:auto;
+}
+#themePanel.open { display:block; }
+#themePanel h3 { margin:0 0 14px; color:var(--text-main); font-size:14px; }
+
+.themeSwatches { display:flex; gap:9px; flex-wrap:wrap; margin-bottom:14px; }
+.swatch {
+  width:34px; height:34px; border-radius:50%; cursor:pointer;
+  border:2px solid transparent; transition:.2s;
+}
+.swatch:hover, .swatch.active { border-color:var(--a1); transform:scale(1.15); }
+
+.mode-btn {
+  padding:10px 8px; border-radius:10px; font-size:12px; font-weight:700;
+  cursor:pointer; transition:.2s; opacity:.7;
+}
+.mode-btn:hover { opacity:1; transform:translateY(-1px); }
+.mode-btn.active { opacity:1; box-shadow:0 0 0 2px var(--a1); }
+
+.themeRow { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+.themeRow label { font-size:12px; color:var(--text-faint); margin:0; width:80px; flex-shrink:0; }
+.themeRow input[type=color] { width:38px; height:30px; padding:2px; border-radius:7px; cursor:pointer; border:1px solid rgba(255,255,255,.12); background:transparent; }
+.themeRow select { padding:6px 10px; font-size:12px; border-radius:8px; }
+
+/* ============================================================
+   MISC
+============================================================ */
+.hidden { display:none; }
+pre { background:rgba(255,255,255,.04); border-radius:13px; padding:18px; overflow:auto; color:#e2e8f0; white-space:pre-wrap; word-break:break-word; font-size:12.5px; }
+::-webkit-scrollbar { width:7px; }
+::-webkit-scrollbar-track { background:#0f172a; }
+::-webkit-scrollbar-thumb { background:#334155; border-radius:20px; }
+::-webkit-scrollbar-thumb:hover { background:#475569; }
+
+@media(max-width:860px){
+  #app { padding:16px; }
+  .app-header { flex-direction:column; align-items:flex-start; }
+  .buttonRow { flex-direction:column; }
+  button { width:100%; }
+  .infoGrid, .analyticsGrid { grid-template-columns:1fr; }
+  .symptomGrid { grid-template-columns:repeat(2,1fr); }
+  .landing-stats { gap:24px; }
+  .landing-title { font-size:2.4rem; }
+}
+
+/* Global SVG Magnification Rule */
+svg {
+  width: 24px !important;
+  height: 24px !important;
+  vertical-align: middle;
+  transition: transform 0.2s ease;
+}
+
+</style>
+</head>
+<body>
+
+<!-- shared blobs -->
+<div class="blob blob1"></div>
+<div class="blob blob2"></div>
+<div class="blob blob3"></div>
+<div class="blob blob4"></div>
+<div class="blob blob5"></div>
+
+<!-- ============================================================
+     LANDING PAGE
+============================================================ -->
+<div id="landing">
+  <div class="landing-bg"></div>
+  <div class="landing-grid"></div>
+  <div class="code-rain" id="codeRain"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
+  <div class="orb orb4"></div>
+
+  <div class="landing-content">
+    <div class="landing-badge"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="10" y1="9" x2="14" y2="9"/></svg>Emergency Department AI Platform</div>
+
+    <h1 class="landing-title">
+      <span class="grad">MedAI<br>Triage</span>
+    </h1>
+
+    <p class="landing-sub">
+      Real-time multilingual emergency triage powered by AI.<br>
+      Analyze, prioritize, and track patients — all in one place.
+    </p>
+
+    <button class="landing-enter" onclick="enterApp()">
+      Enter Dashboard
+    </button>
+
+    <div class="landing-themes">
+      <div class="lt-swatch" style="background:linear-gradient(135deg,#3b82f6,#7c3aed)" onclick="applyPreset('ocean')"   title="Ocean"></div>
+      <div class="lt-swatch" style="background:linear-gradient(135deg,#10b981,#0891b2)" onclick="applyPreset('forest')"  title="Forest"></div>
+      <div class="lt-swatch" style="background:linear-gradient(135deg,#ef4444,#f97316)" onclick="applyPreset('crimson')" title="Crimson"></div>
+      <div class="lt-swatch" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)" onclick="applyPreset('nebula')"  title="Nebula"></div>
+      <div class="lt-swatch" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" onclick="applyPreset('sunset')"  title="Sunset"></div>
+      <div class="lt-swatch" style="background:linear-gradient(135deg,#64748b,#334155)" onclick="applyPreset('slate')"   title="Slate"></div>
+    </div>
+
+    <div class="landing-stats">
+      <div class="ls-item"><div class="ls-num">ESI 1–5</div><div class="ls-label">Triage Levels</div></div>
+      <div class="ls-item"><div class="ls-num">60+</div><div class="ls-label">Languages</div></div>
+      <div class="ls-item"><div class="ls-num">Live</div><div class="ls-label">Queue Updates</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     MAIN APP
+============================================================ -->
+<div id="app">
+<div class="container">
+
+  <div class="app-header">
+    <div class="app-logo"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:8px"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="10" y1="9" x2="14" y2="9"/></svg>MedAI Triage</div>
+    <div id="criticalBanner"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span id="criticalBannerText"></span></div>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabBar">
+    <div class="tab active" onclick="switchTab('intake')">Patient Intake</div>
+    <div class="tab" onclick="switchTab('queue')">Live Queue</div>
+    <div class="tab" onclick="switchTab('beds')">Active Beds</div>
+    <div class="tab" onclick="switchTab('analytics')">Analytics</div>
+    <div class="tab" onclick="switchTab('chatbot')">Medical Chatbot</div>
+    <div class="tab" onclick="switchTab('audit')">Archive</div>
+  </div>
+
+  <!-- TAB: INTAKE -->
+  <div id="tab-intake" class="tabPanel active">
+    <section class="glass">
+      <h2>Patient Intake</h2>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div>
+          <label>Patient Name</label>
+          <input id="name" placeholder="Full name">
+        </div>
+        <div>
+          <label>Age</label>
+          <input id="age" type="number" min="0" max="130" placeholder="e.g. 45">
+        </div>
+      </div>
+
+      <label>Preferred Language</label>
+      <div class="lang-wrap">
+        <input id="langSearch" placeholder="Type to search language…" autocomplete="off" oninput="filterLanguages()" onfocus="openLangDropdown()" onblur="setTimeout(closeLangDropdown,180)">
+        <input type="hidden" id="language" value="English">
+        <div class="lang-dropdown" id="langDropdown"></div>
+      </div>
+
+      <label>Symptoms</label>
+      <textarea id="symptoms" placeholder="Describe symptoms or press mic to speak…"></textarea>
+
+      <div class="buttonRow">
+        <button class="btn-red" onclick="startVoiceInput()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M12 1a3 3 0 0 1 3 3v8a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg> <span style="vertical-align:middle">Speak</span></button>
+        <button onclick="processTriage()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M6 18h8"/><path d="M3 21h18"/><circle cx="12" cy="10" r="5"/><path d="M9 3h1"/><path d="M13 3h1"/><path d="M9 3v4l2 3"/><path d="M14 3v4l-1 2"/></svg> <span style="vertical-align:middle">Analyze Patient</span></button>
+      </div>
+      <div id="voiceStatus"></div>
+      <div id="status"></div>
+    </section>
+
+    <div style="margin-top: 20px; margin-bottom: 20px;">
+      <label style="margin-bottom: 10px; display: block; font-weight: 600; font-size: 0.88rem; color: var(--text-soft);">Quick Select Symptoms</label>
+      <div class="symptomGrid">
+        <div class="symptomCard" data-symptom="Chest Pain" onclick="toggleEmojiSymptom(this)">
+          <div class="symptomEmoji">❤️</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-soft);">Chest Pain</div>
+        </div>
+        <div class="symptomCard" data-symptom="Headache" onclick="toggleEmojiSymptom(this)">
+          <div class="symptomEmoji">🧠</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-soft);">Headache</div>
+        </div>
+        <div class="symptomCard" data-symptom="Breathing Issue" onclick="toggleEmojiSymptom(this)">
+          <div class="symptomEmoji">🫁</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-soft);">Breathing Issue</div>
+        </div>
+        <div class="symptomCard" data-symptom="Stomach Pain" onclick="toggleEmojiSymptom(this)">
+          <div class="symptomEmoji">🤢</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-soft);">Stomach Pain</div>
+        </div>
+        <div class="symptomCard" data-symptom="Fever / Chills" onclick="toggleEmojiSymptom(this)">
+          <div class="symptomEmoji">🤒</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-soft);">Fever / Chills</div>
+        </div>
+        <div class="symptomCard" data-symptom="Injury / Fracture" onclick="toggleEmojiSymptom(this)">
+          <div class="symptomEmoji">🦴</div>
+          <div style="font-size: 13px; font-weight: 600; color: var(--text-soft);">Injury / Fracture</div>
+        </div>
+      </div>
+    </div>
+
+    <section id="resultCard" class="glass hidden">
+      <h2>AI Analysis</h2>
+      <div class="infoGrid">
+        <div class="infoCard"><h3>ESI Level</h3><div id="esiLabel"></div></div>
+        <div class="infoCard"><h3>Confidence</h3><p id="confidence"></p></div>
+        <div class="infoCard"><h3>Human Review</h3><p id="humanReview"></p></div>
+        <div class="infoCard"><h3>Est. Wait</h3><p id="waitTime"></p></div>
+      </div>
+      <hr>
+      <h3>Translation</h3><p id="translation"></p>
+      <h3>Clinical Rationale</h3><p id="rationale"></p>
+      <h3>Patient Instructions</h3><p id="instructions"></p>
+      <button class="btn-purple" style="margin-top:12px" onclick="speakInstructions()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg> <span style="vertical-align:middle">Read Aloud</span></button>
+      <hr>
+      <h3>Alerts</h3><div id="alerts"></div>
+      <h3>Anatomy</h3><div id="anatomy"></div>
+      <h3>Vitals</h3><div id="vitals"></div>
+      <h3>Allergies</h3><div id="allergies"></div>
+      <h3>Medications</h3><div id="medications"></div>
+    </section>
+  </div>
+
+  <!-- TAB: QUEUE -->
+  <div id="tab-queue" class="tabPanel">
+    <section class="glass">
+      <div class="sectionHeader">
+        <h2>Live Waiting Queue</h2>
+        <div class="buttonRow" style="margin-top:0">
+          <input id="searchInput" placeholder="Search…" style="width:190px;padding:9px 13px">
+          <button class="btn-sm" onclick="searchPatients()">Search</button>
+          <button class="btn-sm" onclick="loadQueue()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span style="vertical-align:middle">Refresh</span></button>
+        </div>
+      </div>
+      <div id="queue"></div>
+    </section>
+  </div>
+
+  <!-- TAB: BEDS -->
+  <div id="tab-beds" class="tabPanel">
+    <section class="glass">
+      <div class="sectionHeader">
+        <h2>Patients In Treatment</h2>
+        <button class="btn-sm" onclick="loadBeds()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span style="vertical-align:middle">Refresh</span></button>
+      </div>
+      <div id="beds"></div>
+    </section>
+  </div>
+
+  <!-- TAB: ANALYTICS -->
+  <div id="tab-analytics" class="tabPanel">
+    <section class="glass">
+      <div class="sectionHeader">
+        <h2>Analytics Dashboard</h2>
+        <button class="btn-sm" onclick="loadAnalytics()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span style="vertical-align:middle">Refresh</span></button>
+      </div>
+      <div class="analyticsGrid">
+        <div class="analyticsCard"><h3>Waiting</h3><div class="big-number" id="patientsWaiting">—</div></div>
+        <div class="analyticsCard"><h3>In Treatment</h3><div class="big-number" id="patientsInTreatment">—</div></div>
+        <div class="analyticsCard"><h3>Critical</h3><div class="big-number" id="criticalCases">—</div></div>
+        <div class="analyticsCard"><h3>Discharged</h3><div class="big-number" id="patientsDischarge">—</div></div>
+        <div class="analyticsCard"><h3>Avg Wait (min)</h3><div class="big-number" id="avgWait">—</div></div>
+        <div class="analyticsCard"><h3>Oldest Wait (min)</h3><div class="big-number" id="oldestWait">—</div></div>
+        <div class="analyticsCard"><h3>Avg Confidence</h3><div class="big-number" id="avgConfidence">—</div></div>
+        <div class="analyticsCard"><h3>Avg Treatment (min)</h3><div class="big-number" id="avgTreatment">—</div></div>
+        <div class="analyticsCard"><h3>Highest Priority</h3><div id="highestPriority" style="margin-top:8px"></div></div>
+        <div class="analyticsCard"><h3>Languages</h3><div id="languages" style="margin-top:8px"></div></div>
+        <div class="analyticsCard"><h3>ESI Distribution</h3><div id="esiDistribution" style="margin-top:8px"></div></div>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB: CHATBOT -->
+  <div id="tab-chatbot" class="tabPanel">
+    <section class="glass">
+      <div class="sectionHeader">
+        <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:8px"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8.5" cy="16" r="1" fill="currentColor"/><circle cx="15.5" cy="16" r="1" fill="currentColor"/></svg>Medical Chatbot</h2>
+        <button class="btn-gray btn-sm" onclick="clearChat()">Clear</button>
+      </div>
+      <p style="color:var(--text-faint);font-size:13px;margin-bottom:16px">Ask about patients, the queue, timelines, priorities, or clinical guidance. The chatbot has full context of all active patients.</p>
+      <div id="chatMessages"></div>
+      <div class="buttonRow">
+        <input id="chatInput" placeholder="Ask anything about the current patients…" onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
+        <button onclick="sendChat()">Send</button>
+      </div>
+    </section>
+  </div>
+
+  <!-- TAB: ARCHIVE -->
+  <div id="tab-audit" class="tabPanel">
+    <section class="glass">
+      <div class="sectionHeader"><h2>Audit Log</h2><button class="btn-sm" onclick="loadAudit()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span style="vertical-align:middle">Refresh</span></button></div>
+      <div id="auditList"></div>
+    </section>
+    <section class="glass">
+      <div class="sectionHeader"><h2>Discharged Archive</h2><button class="btn-sm" onclick="loadArchive()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg> <span style="vertical-align:middle">Refresh</span></button></div>
+      <div id="archiveList"></div>
+    </section>
+    <section class="glass" style="border-color:rgba(239,68,68,.35)">
+      <h2 style="color:#fca5a5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Danger Zone</h2>
+      <p style="margin-bottom:16px">This permanently deletes every patient record, queue entry, bed assignment, audit event, and chat history. This cannot be undone.</p>
+      <button class="btn-red" onclick="confirmWipeData()"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> <span style="vertical-align:middle">Wipe All Patient Data</span></button>
+    </section>
+  </div>
+
+</div><!-- /container -->
+</div><!-- /app -->
+
+<!-- MODAL: WIPE CONFIRM -->
+<div id="wipeModal" class="modal-backdrop">
+  <div class="modal" style="border-color:rgba(239,68,68,.4)">
+    <h2 style="color:#fca5a5"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#fca5a5" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Wipe All Patient Data?</h2>
+    <p style="margin-bottom:10px">This will permanently delete:</p>
+    <p style="margin-bottom:4px">• Every patient in the queue and in treatment</p>
+    <p style="margin-bottom:4px">• The full discharged archive</p>
+    <p style="margin-bottom:4px">• The entire audit log</p>
+    <p style="margin-bottom:18px">• The medical chatbot's conversation memory</p>
+    <p style="margin-bottom:18px;font-weight:700;color:#fca5a5">This action cannot be undone.</p>
+    <label>Type <strong>DELETE</strong> to confirm</label>
+    <input id="wipeConfirmInput" placeholder="Type DELETE" autocomplete="off">
+    <div class="modal-actions">
+      <button class="btn-gray" onclick="closeModal('wipeModal')">Cancel</button>
+      <button class="btn-red" onclick="executeWipeData()">Permanently Wipe Data</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: OVERRIDE -->
+<div id="overrideModal" class="modal-backdrop">
+  <div class="modal">
+    <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>ESI Override</h2>
+    <input type="hidden" id="overridePatientId">
+    <label>Doctor Name</label>
+    <input id="overrideDoctor" placeholder="Dr. Smith">
+    <label>New ESI Level</label>
+    <select id="overrideEsi">
+      <option value="ESI-1">ESI-1 — Immediate</option>
+      <option value="ESI-2">ESI-2 — Emergent</option>
+      <option value="ESI-3">ESI-3 — Urgent</option>
+      <option value="ESI-4">ESI-4 — Less Urgent</option>
+      <option value="ESI-5">ESI-5 — Non-Urgent</option>
+    </select>
+    <label>Reason</label>
+    <textarea id="overrideReason" style="min-height:90px" placeholder="Clinical reasoning…"></textarea>
+    <div class="modal-actions">
+      <button class="btn-gray" onclick="closeModal('overrideModal')">Cancel</button>
+      <button onclick="submitOverride()">Save Override</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: RECHECK -->
+<div id="recheckModal" class="modal-backdrop">
+  <div class="modal">
+    <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Re-Triage</h2>
+    <input type="hidden" id="recheckPatientId">
+    <label>Updated Symptoms</label>
+    <textarea id="recheckSymptoms" style="min-height:110px"></textarea>
+    <div class="modal-actions">
+      <button class="btn-gray" onclick="closeModal('recheckModal')">Cancel</button>
+      <button class="btn-orange" onclick="submitRecheck()">Re-Analyze</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: NOTES -->
+<div id="notesModal" class="modal-backdrop">
+  <div class="modal">
+    <h2><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Treatment Notes</h2>
+    <input type="hidden" id="notesPatientId">
+    <label>Notes</label>
+    <textarea id="notesText" style="min-height:130px"></textarea>
+    <div class="modal-actions">
+      <button class="btn-gray" onclick="closeModal('notesModal')">Cancel</button>
+      <button class="btn-green" onclick="submitNotes()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PATIENT DETAIL PANEL -->
+<div id="patientPanel">
+  <div class="patientPanelInner">
+    <button class="panelClose" onclick="closePatientPanel()"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+
+    <div style="margin-bottom:18px">
+      <h2 id="panelName" style="margin-bottom:6px;font-size:1.5rem"></h2>
+      <div id="panelMeta" style="color:var(--text-faint);font-size:13px"></div>
+      <div id="panelBadges" style="margin-top:10px"></div>
+    </div>
+
+    <!-- Flag buttons -->
+    <div style="margin-bottom:16px">
+      <div style="font-size:12px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">PATIENT STATUS</div>
+      <div class="flagBtns">
+        <button class="flag-btn fb-priority" onclick="setFlag('priority')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> <span style="vertical-align:middle">Priority</span></button>
+        <button class="flag-btn fb-extended" onclick="setFlag('extended')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg> <span style="vertical-align:middle">Extended Stay</span></button>
+        <button class="flag-btn fb-deceased" onclick="setFlag('deceased')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><circle cx="12" cy="11" r="8"/><path d="M9 17v2a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-2"/><line x1="9" y1="11" x2="9" y2="11"/><line x1="15" y1="11" x2="15" y2="11"/><path d="M9.5 8.5a2.5 2.5 0 1 1 5 0"/></svg> <span style="vertical-align:middle">Deceased</span></button>
+        <button class="flag-btn fb-clear"    onclick="setFlag('')"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> <span style="vertical-align:middle">Clear</span></button>
+      </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+      <button class="btn-purple btn-sm" id="panelOverrideBtn" onclick="openOverrideFromPanel()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> <span style="vertical-align:middle">Override ESI</span></button>
+      <button class="btn-orange btn-sm" id="panelRecheckBtn"  onclick="openRecheckFromPanel()"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>Re-Triage</button>
+      <button class="btn-green  btn-sm" id="panelBedBtn"      onclick="moveToBedFromPanel()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/></svg> <span style="vertical-align:middle">Move to Bed</span></button>
+      <button class="btn-sm"            id="panelNotesBtn"    onclick="openNotesFromPanel()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> <span style="vertical-align:middle">Notes</span></button>
+      <button class="btn-red    btn-sm" id="panelDischargeBtn" onclick="dischargeFromPanel()" style="display:none"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:4px"><polyline points="20 6 9 17 4 12"/></svg> <span style="vertical-align:middle">Discharge</span></button>
+    </div>
+
+    <hr style="margin-bottom:18px">
+
+    <!-- Condition Log -->
+    <div class="conditionLogForm">
+      <h3 style="margin-top:0;margin-bottom:10px;font-size:14px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:5px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>Log Current Condition</h3>
+      <textarea id="conditionNote" style="min-height:80px;font-size:13px" placeholder="Symptoms, vitals, observations…"></textarea>
+      <div style="margin-top:10px">
+        <button class="btn-green btn-sm" onclick="submitConditionLog()">Add to Timeline</button>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <h3 style="margin-top:22px;margin-bottom:4px">Patient Timeline</h3>
+    <div class="timelineTrack" id="panelTimeline"></div>
+  </div>
+</div>
+
+<!-- THEME FAB -->
+<button id="themeFab" onclick="toggleThemePanel()" title="Customize"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="white"/><circle cx="17.5" cy="10.5" r=".5" fill="white"/><circle cx="8.5" cy="7.5" r=".5" fill="white"/><circle cx="6.5" cy="12.5" r=".5" fill="white"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg></button>
+<div id="themePanel">
+  <h3><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:6px"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/></svg>Customize</h3>
+
+  <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">BACKGROUND MODE</div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">
+    <button class="mode-btn btn-sm" id="mode-beta"     onclick="applyMode('beta')"     style="background:#1e293b;border:1px solid rgba(255,255,255,.15)">Beta</button>
+    <button class="mode-btn btn-sm" id="mode-dark"     onclick="applyMode('dark')"     style="background:#171717;border:1px solid rgba(255,255,255,.15)">Dark</button>
+    <button class="mode-btn btn-sm" id="mode-light"     onclick="applyMode('light')"    style="background:#f1f5f9;color:#0f172a;border:1px solid rgba(0,0,0,.1)">Light</button>
+    <button class="mode-btn btn-sm" id="mode-hospital"  onclick="applyMode('hospital')" style="background:#eef3f8;color:#0c2233;border:1px solid rgba(0,0,0,.1)">Hospital</button>
+  </div>
+
+  <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">ACCENT COLORS</div>
+  <div class="themeSwatches">
+    <div class="swatch" style="background:linear-gradient(135deg,#3b82f6,#7c3aed)" onclick="applyPreset('ocean')"   id="sw-ocean"></div>
+    <div class="swatch" style="background:linear-gradient(135deg,#10b981,#0891b2)" onclick="applyPreset('forest')"  id="sw-forest"></div>
+    <div class="swatch" style="background:linear-gradient(135deg,#ef4444,#f97316)" onclick="applyPreset('crimson')" id="sw-crimson"></div>
+    <div class="swatch" style="background:linear-gradient(135deg,#8b5cf6,#ec4899)" onclick="applyPreset('nebula')"  id="sw-nebula"></div>
+    <div class="swatch" style="background:linear-gradient(135deg,#f59e0b,#ef4444)" onclick="applyPreset('sunset')"  id="sw-sunset"></div>
+    <div class="swatch" style="background:linear-gradient(135deg,#64748b,#334155)" onclick="applyPreset('slate')"   id="sw-slate"></div>
+  </div>
+  <div class="themeRow"><label>Accent 1</label><input type="color" id="colorAccent1" oninput="applyCustomColor()" value="#3b82f6"></div>
+  <div class="themeRow"><label>Accent 2</label><input type="color" id="colorAccent2" oninput="applyCustomColor()" value="#7c3aed"></div>
+  <div class="themeRow"><label>Accent 3</label><input type="color" id="colorAccent3" oninput="applyCustomColor()" value="#06b6d4"></div>
+  <div class="themeRow"><label>Buttons</label> <input type="color" id="colorBtn"    oninput="applyCustomColor()" value="#3b82f6"></div>
+  <div class="themeRow">
+    <label>Font</label>
+    <select id="fontPicker" onchange="applyFont()">
+      <option value="'Sora','Inter',sans-serif">Sora</option>
+      <option value="'Inter',sans-serif">Inter</option>
+      <option value="'Georgia',serif">Georgia</option>
+      <option value="'Courier New',monospace">Mono</option>
+    </select>
+  </div>
+
+  <hr style="margin:16px 0">
+
+  <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">SAVE COMBO AS PRESET</div>
+  <div style="display:flex;gap:6px;margin-bottom:12px">
+    <input id="presetNameInput" placeholder="Preset name…" style="padding:8px 12px;font-size:12.5px">
+    <button class="btn-sm" onclick="saveCurrentAsPreset()">Save</button>
+  </div>
+  <div id="savedPresetsList"></div>
+</div>
+
+<audio id="bgAudioPlayer" preload="none"></audio>
+
+<script>
+
+/* ================================================================
+   CONSTANTS
+================================================================ */
+const API = "http://127.0.0.1:5001";
+
+/* ================================================================
+   STATE
+================================================================ */
+let latestResult      = null;
+let selectedSymptoms  = [];
+let isProcessing      = false;
+let currentPanelPatient = null;
+let selectedLanguage  = "English";
+
+/* ================================================================
+   QUICK-SELECT SYMPTOM EMOJI BUTTONS
+================================================================ */
+function toggleEmojiSymptom(el) {
+  const symptom = el.dataset.symptom;
+  el.classList.toggle("selected");
+
+  if (el.classList.contains("selected")) {
+    if (!selectedSymptoms.includes(symptom)) selectedSymptoms.push(symptom);
+  } else {
+    selectedSymptoms = selectedSymptoms.filter(s => s !== symptom);
+  }
+
+  const textLog = document.getElementById("symptoms");
+  if (textLog) {
+    textLog.value = selectedSymptoms.length > 0
+      ? `Patient presents with: ${selectedSymptoms.join(", ")}.`
+      : "";
+  }
+}
+
+/* ================================================================
+   ALL LANGUAGES (60+)
+================================================================ */
+const ALL_LANGUAGES = [
+  ["English","en-US"],["Spanish","es-ES"],["Arabic","ar-SA"],["Mandarin","zh-CN"],
+  ["Hindi","hi-IN"],["French","fr-FR"],["Portuguese","pt-BR"],["Russian","ru-RU"],
+  ["Bengali","bn-BD"],["Urdu","ur-PK"],["Indonesian","id-ID"],["German","de-DE"],
+  ["Japanese","ja-JP"],["Swahili","sw-KE"],["Marathi","mr-IN"],["Telugu","te-IN"],
+  ["Turkish","tr-TR"],["Korean","ko-KR"],["Vietnamese","vi-VN"],["Tamil","ta-IN"],
+  ["Italian","it-IT"],["Thai","th-TH"],["Gujarati","gu-IN"],["Persian","fa-IR"],
+  ["Polish","pl-PL"],["Ukrainian","uk-UA"],["Dutch","nl-NL"],["Pashto","ps-AF"],
+  ["Kannada","kn-IN"],["Odia","or-IN"],["Malayalam","ml-IN"],["Punjabi","pa-IN"],
+  ["Sinhala","si-LK"],["Nepali","ne-NP"],["Amharic","am-ET"],["Yoruba","yo-NG"],
+  ["Hausa","ha-NG"],["Igbo","ig-NG"],["Zulu","zu-ZA"],["Xhosa","xh-ZA"],
+  ["Afrikaans","af-ZA"],["Somali","so-SO"],["Malay","ms-MY"],["Tagalog","tl-PH"],
+  ["Cebuano","ceb-PH"],["Javanese","jv-ID"],["Burmese","my-MM"],["Khmer","km-KH"],
+  ["Lao","lo-LA"],["Sinhalese","si-LK"],["Hebrew","he-IL"],["Greek","el-GR"],
+  ["Romanian","ro-RO"],["Hungarian","hu-HU"],["Czech","cs-CZ"],["Slovak","sk-SK"],
+  ["Croatian","hr-HR"],["Serbian","sr-RS"],["Bulgarian","bg-BG"],["Finnish","fi-FI"],
+  ["Norwegian","nb-NO"],["Swedish","sv-SE"],["Danish","da-DK"],["Catalan","ca-ES"],
+  // Indigenous languages of the Americas.
+  // Browsers' Web Speech API has no native voice codes for these, so voice
+  // input falls back to English recognition (handled in startVoiceInput);
+  // typed/symptom-picker entry and AI translation still work normally.
+  ["Quechua","qu-PE",true],["Nahuatl","nah-MX",true],["Maya (Yucatec)","yua-MX",true],
+  ["Guarani","gn-PY",true],["Aymara","ay-BO",true],["Mapudungun","arn-CL",true],
+  ["Navajo (Diné Bizaad)","nv-US",true],["Cherokee","chr-US",true],["Ojibwe","oj-CA",true],
+  ["Inuktitut","iu-CA",true],["Mixtec","mix-MX",true],["Zapotec","zap-MX",true],
+  ["Kʼicheʼ","quc-GT",true],["Wayuu","guc-CO",true],["Lakota","lkt-US",true],
+];
+
+/* ================================================================
+   LANDING
+================================================================ */
+function spawnParticles() {
+  const landing = document.getElementById("landing");
+  for (let i = 0; i < 28; i++) {
+    const p = document.createElement("div");
+    p.className = "particle";
+    p.style.cssText = `
+      left:${Math.random()*100}%;
+      bottom:${Math.random()*20}%;
+      width:${2+Math.random()*3}px;
+      height:${2+Math.random()*3}px;
+      animation-duration:${6+Math.random()*12}s;
+      animation-delay:${Math.random()*10}s;
+      opacity:${0.3+Math.random()*0.5};
+    `;
+    landing.appendChild(p);
+  }
+}
+
+/* ================================================================
+   CODE RAIN — faint flowing source snippets behind the landing page
+================================================================ */
+const CODE_SNIPPETS = [
+  "from flask import Flask, request, jsonify",
+  "app = Flask(__name__)",
+  "CORS(app)",
+  "client = genai.Client(api_key=os.getenv(\"GEMINI_API_KEY\"))",
+  "patient_queue = []",
+  "active_beds = []",
+  "audit_log = []",
+  "chat_history = []",
+  "DB_NAME = \"triage.db\"",
+  "def get_db():",
+  "    conn = sqlite3.connect(DB_NAME)",
+  "    conn.row_factory = sqlite3.Row",
+  "    return conn",
+  "@app.route(\"/analyze\", methods=[\"POST\"])",
+  "def analyze():",
+  "    data = request.get_json()",
+  "    symptoms = data.get(\"symptoms\", \"\")",
+  "    result = analyze_with_gemini(language, symptoms)",
+  "ESI-1 = Immediate life threat",
+  "ESI-2 = Emergent",
+  "ESI-3 = Urgent",
+  "esi_label: \"Level 3: Urgent\"",
+  "confidence: 0.0 to 1.0",
+  "requires_human_review: false",
+  "def sort_queue():",
+  "    patient_queue.sort(key=lambda p: ...)",
+  "def waiting_minutes(patient):",
+  "    arrival = datetime.fromisoformat(...)",
+  "@app.route(\"/queue\")",
+  "def queue():",
+  "    update_wait_times()",
+  "    return jsonify(patient_queue)",
+  "@app.route(\"/move_to_bed\", methods=[\"POST\"])",
+  "@app.route(\"/override\", methods=[\"POST\"])",
+  "@app.route(\"/timeline/<patient_id>\")",
+  "@app.route(\"/flag\", methods=[\"POST\"])",
+  "@app.route(\"/wipe_all_data\", methods=[\"POST\"])",
+  "patient[\"doctor_override\"] = {",
+  "  \"old\": old, \"new\": new_esi,",
+  "  \"reason\": reason, \"doctor\": doctor",
+  "}",
+  "function processTriage() {",
+  "  const symptoms = document.getElementById(\"symptoms\").value;",
+  "  const res = await fetch(`${API}/analyze`, {",
+  "    method: \"POST\",",
+  "    body: JSON.stringify({ name, language, symptoms })",
+  "  });",
+  "function applyMode(modeName) {",
+  "  const m = MODES[modeName];",
+  "  r.setProperty(\"--bg\", m.bg);",
+  "  r.setProperty(\"--text-main\", m.textMain);",
+  "function openPatientPanel(p) {",
+  "  currentPanelPatient = p;",
+  "  renderPanelTimeline(p);",
+  "const ALL_LANGUAGES = [",
+  "  [\"English\",\"en-US\"], [\"Spanish\",\"es-ES\"],",
+  "  [\"Quechua\",\"qu-PE\",true],",
+  "function setFlag(flag) {",
+  "  fetch(`${API}/flag`, { method: \"POST\", ... });",
+  "function _parallaxTick() {",
+  "  b.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;",
+  ".glass { backdrop-filter: blur(26px) saturate(140%); }",
+  "audioEl.play().catch(() => {});",
+  "if __name__ == \"__main__\":",
+  "    load_patients()",
+  "    app.run(host=\"0.0.0.0\", port=5001)",
+];
+
+function _randomCodeBlock(lineCount) {
+  const lines = [];
+  let idx = Math.floor(Math.random() * CODE_SNIPPETS.length);
+  for (let i = 0; i < lineCount; i++) {
+    lines.push(CODE_SNIPPETS[idx % CODE_SNIPPETS.length]);
+    idx++;
+  }
+  return lines;
+}
+
+function _typeColumn(el, lines, charDelay) {
+  let lineIdx = 0, charIdx = 0;
+  let buffer = "";
+
+  function tick() {
+    if (lineIdx >= lines.length) {
+      // restart this column with a fresh random block once it's done
+      lines = _randomCodeBlock(lines.length);
+      lineIdx = 0; charIdx = 0; buffer = "";
+    }
+    const currentLine = lines[lineIdx];
+    if (charIdx <= currentLine.length) {
+      const typed = currentLine.slice(0, charIdx);
+      el.innerHTML = buffer + typed + '<span class="code-cursor"></span>';
+      charIdx++;
+      setTimeout(tick, charDelay + Math.random() * charDelay);
+    } else {
+      buffer += currentLine + "\n";
+      lineIdx++;
+      charIdx = 0;
+      setTimeout(tick, charDelay * 4); // pause between lines
+    }
+  }
+  tick();
+}
+
+function spawnCodeRain() {
+  const container = document.getElementById("codeRain");
+  if (!container) return;
+
+  const columnCount = window.innerWidth < 700 ? 5 : 9;
+
+  for (let i = 0; i < columnCount; i++) {
+    const col = document.createElement("div");
+    col.className = "code-column";
+
+    const leftPct = (i / columnCount) * 100 + (Math.random() * 6 - 3);
+    const duration = 38 + Math.random() * 30;       // slow drift, varied per column
+    const delay = -Math.random() * duration;         // negative delay so they're mid-flow on load
+    const fontSize = 8 + Math.random() * 3;           // tiny, "almost too small to read"
+    const tint = i % 3 === 0 ? "var(--a1)" : i % 3 === 1 ? "var(--a2)" : "var(--a3)";
+
+    col.style.cssText = `
+      left:${leftPct}%;
+      font-size:${fontSize}px;
+      color:${tint};
+      animation-duration:${duration}s;
+      animation-delay:${delay}s;
+      opacity:${0.10 + Math.random() * 0.10};
+    `;
+
+    container.appendChild(col);
+
+    const lineCount = 22 + Math.floor(Math.random() * 10);
+    const lines = _randomCodeBlock(lineCount);
+    const charDelay = 55 + Math.random() * 70; // typing speed per character
+    _typeColumn(col, lines, charDelay);
+  }
+}
+
+function enterApp() {
+  const landing = document.getElementById("landing");
+  landing.style.transition = "opacity .7s ease, transform .7s ease";
+  landing.style.opacity = "0";
+  landing.style.transform = "scale(1.03)";
+  setTimeout(() => {
+    landing.style.display = "none";
+    const app = document.getElementById("app");
+    app.classList.add("visible");
+    app.style.opacity = "0";
+    app.style.transition = "opacity .6s ease";
+    requestAnimationFrame(() => { app.style.opacity = "1"; });
+    initApp();
+  }, 680);
+}
+
+/* ================================================================
+   PARALLAX (mouse + scroll, smoothed via rAF)
+================================================================ */
+let _mouseX = 0, _mouseY = 0;       // -1..1 normalized
+let _scrollY = 0;
+let _parallaxRunning = false;
+
+const BLOB_FACTORS = [
+  { mx:-34, my:-34, sx:0,  sy: 70 },  // blob1 — drifts opposite to mouse, strong scroll pull
+  { mx: 26, my: 26, sx:0,  sy:-60 },  // blob2 — opposite scroll direction for depth contrast
+  { mx: 18, my: 18, sx:0,  sy: 45 },  // blob3
+  { mx:-14, my: 20, sx:0,  sy:-38 },  // blob4
+  { mx: 22, my:-16, sx:0,  sy: 55 },  // blob5
+];
+
+function _parallaxTick() {
+  const blobs = document.querySelectorAll(".blob");
+  blobs.forEach((b, i) => {
+    const f = BLOB_FACTORS[i] || BLOB_FACTORS[0];
+    const tx = _mouseX * f.mx;
+    const ty = _mouseY * f.my + (_scrollY * 0.001 * f.sy);
+    b.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
+  });
+
+  const orbs = document.querySelectorAll(".orb");
+  orbs.forEach((o, i) => {
+    const fac = (i + 1) * 9;
+    o.style.transform = `translate3d(${_mouseX*fac}px, ${_mouseY*fac}px, 0)`;
+  });
+
+  _parallaxRunning = false;
+}
+
+function _queueParallaxTick() {
+  if (!_parallaxRunning) {
+    _parallaxRunning = true;
+    requestAnimationFrame(_parallaxTick);
+  }
+}
+
+function initParallax() {
+  document.addEventListener("mousemove", e => {
+    const cx = window.innerWidth / 2, cy = window.innerHeight / 2;
+    _mouseX = (e.clientX - cx) / cx;
+    _mouseY = (e.clientY - cy) / cy;
+    _queueParallaxTick();
+
+    // glass cards subtle tilt (kept separate, lighter-weight)
+    document.querySelectorAll(".glass").forEach(g => {
+      const rect = g.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) return; // skip offscreen cards
+      const gx = (e.clientX - (rect.left + rect.width/2)) / (rect.width/2);
+      const gy = (e.clientY - (rect.top + rect.height/2)) / (rect.height/2);
+      g.style.transform = `perspective(800px) rotateX(${gy*-1.2}deg) rotateY(${gx*1.2}deg) translateY(-3px)`;
+    });
+  });
+
+  document.addEventListener("mouseleave", () => {
+    document.querySelectorAll(".glass").forEach(g => { g.style.transform = ""; });
+  });
+
+  window.addEventListener("scroll", () => {
+    _scrollY = window.scrollY;
+    _queueParallaxTick();
+  }, { passive: true });
+
+  // run once immediately so blobs are positioned correctly on load
+  _queueParallaxTick();
+}
+
+/* ================================================================
+   THEME — BACKGROUND MODES
+   Each mode sets the full semantic palette (bg, text, surfaces).
+================================================================ */
+const MODES = {
+  beta: { // current dark glass look (default/original)
+    bg:"#020617", bg2:"#0f172a",
+    textMain:"white", textSoft:"#e2e8f0", textMuted:"#94a3b8",
+    textFaint:"#64748b", textDim:"#475569", textDimmer:"#334155", textDimmest:"#0f172a",
+    surface:"rgba(255,255,255,.055)", surfaceStrong:"rgba(255,255,255,.10)", surfaceSoft:"rgba(255,255,255,.05)",
+    borderSoft:"rgba(255,255,255,.09)", borderStrong:"rgba(255,255,255,.14)",
+    modalBg:"#0f172a", panelBg:"#0c1526", fabBg:"#111827",
+    blobOpacity:".55",
+  },
+  dark: { // deeper, more neutral dark
+    bg:"#0a0a0a", bg2:"#171717",
+    textMain:"#f5f5f5", textSoft:"#d4d4d4", textMuted:"#a3a3a3",
+    textFaint:"#737373", textDim:"#525252", textDimmer:"#404040", textDimmest:"#262626",
+    surface:"rgba(255,255,255,.045)", surfaceStrong:"rgba(255,255,255,.09)", surfaceSoft:"rgba(255,255,255,.04)",
+    borderSoft:"rgba(255,255,255,.08)", borderStrong:"rgba(255,255,255,.13)",
+    modalBg:"#171717", panelBg:"#121212", fabBg:"#1a1a1a",
+    blobOpacity:".42",
+  },
+  light: { // bright clean light mode
+    bg:"#f1f5f9", bg2:"#e2e8f0",
+    textMain:"#0f172a", textSoft:"#1e293b", textMuted:"#475569",
+    textFaint:"#64748b", textDim:"#94a3b8", textDimmer:"#cbd5e1", textDimmest:"#f1f5f9",
+    surface:"rgba(15,23,42,.04)", surfaceStrong:"rgba(15,23,42,.08)", surfaceSoft:"rgba(15,23,42,.035)",
+    borderSoft:"rgba(15,23,42,.08)", borderStrong:"rgba(15,23,42,.14)",
+    modalBg:"#ffffff", panelBg:"#ffffff", fabBg:"#ffffff",
+    blobOpacity:".3",
+  },
+  hospital: { // clinical white/blue, high-contrast and calm
+    bg:"#eef3f8", bg2:"#dde8f0",
+    textMain:"#0c2233", textSoft:"#1c3a4f", textMuted:"#4a6b80",
+    textFaint:"#7493a6", textDim:"#a3bdca", textDimmer:"#cddae2", textDimmest:"#eef3f8",
+    surface:"rgba(12,80,120,.04)", surfaceStrong:"rgba(12,80,120,.08)", surfaceSoft:"rgba(12,80,120,.03)",
+    borderSoft:"rgba(12,80,120,.10)", borderStrong:"rgba(12,80,120,.18)",
+    modalBg:"#ffffff", panelBg:"#ffffff", fabBg:"#ffffff",
+    blobOpacity:".26",
+  },
+};
+
+const MODE_LABELS = { beta:"Beta (Original)", dark:"Dark", light:"Light", hospital:"Hospital" };
+
+/* ACCENT PRESETS (independent of background mode) */
+const PRESETS = {
+  ocean:   {a1:"#3b82f6",a2:"#7c3aed",a3:"#06b6d4",b1:"#3b82f6",b2:"#2563eb"},
+  forest:  {a1:"#10b981",a2:"#0891b2",a3:"#34d399",b1:"#10b981",b2:"#059669"},
+  crimson: {a1:"#ef4444",a2:"#f97316",a3:"#fbbf24",b1:"#ef4444",b2:"#dc2626"},
+  nebula:  {a1:"#8b5cf6",a2:"#ec4899",a3:"#a78bfa",b1:"#8b5cf6",b2:"#7c3aed"},
+  sunset:  {a1:"#f59e0b",a2:"#ef4444",a3:"#fb923c",b1:"#f59e0b",b2:"#d97706"},
+  slate:   {a1:"#64748b",a2:"#334155",a3:"#94a3b8",b1:"#475569",b2:"#334155"},
+};
+
+let currentMode  = "beta";
+let currentAccent= {a1:"#3b82f6",a2:"#7c3aed",a3:"#06b6d4",b1:"#3b82f6",b2:"#2563eb"};
+
+function applyVars(a1,a2,a3,b1,b2) {
+  const r = document.documentElement.style;
+  r.setProperty("--a1",a1); r.setProperty("--a2",a2); r.setProperty("--a3",a3);
+  r.setProperty("--b1",b1); r.setProperty("--b2",b2);
+  currentAccent = {a1,a2,a3,b1,b2};
+}
+
+function applyMode(modeName) {
+  const m = MODES[modeName]; if(!m) return;
+  currentMode = modeName;
+  const r = document.documentElement.style;
+  r.setProperty("--bg", m.bg);
+  r.setProperty("--bg2", m.bg2);
+  r.setProperty("--text-main", m.textMain);
+  r.setProperty("--text-soft", m.textSoft);
+  r.setProperty("--text-muted", m.textMuted);
+  r.setProperty("--text-faint", m.textFaint);
+  r.setProperty("--text-dim", m.textDim);
+  r.setProperty("--text-dimmer", m.textDimmer);
+  r.setProperty("--text-dimmest", m.textDimmest);
+  r.setProperty("--surface", m.surface);
+  r.setProperty("--surface-strong", m.surfaceStrong);
+  r.setProperty("--surface-soft", m.surfaceSoft);
+  r.setProperty("--border-soft", m.borderSoft);
+  r.setProperty("--border-strong", m.borderStrong);
+  r.setProperty("--modal-bg", m.modalBg);
+  r.setProperty("--panel-bg", m.panelBg);
+  r.setProperty("--fab-bg", m.fabBg);
+  document.documentElement.style.setProperty("--blob-opacity", m.blobOpacity);
+  document.querySelectorAll(".mode-btn").forEach(b=>b.classList.remove("active"));
+  const btn = document.getElementById("mode-"+modeName);
+  if (btn) btn.classList.add("active");
+  localStorage.setItem("triageMode", modeName);
+}
+
+function applyPreset(name) {
+  const p = PRESETS[name]; if(!p) return;
+  applyVars(p.a1,p.a2,p.a3,p.b1,p.b2);
+  document.getElementById("colorAccent1").value = p.a1;
+  document.getElementById("colorAccent2").value = p.a2;
+  document.getElementById("colorAccent3").value = p.a3;
+  document.getElementById("colorBtn").value     = p.b1;
+  document.querySelectorAll(".swatch").forEach(s=>s.classList.remove("active"));
+  const sw = document.getElementById("sw-"+name);
+  if (sw) sw.classList.add("active");
+  localStorage.setItem("triagePreset",name);
+  localStorage.removeItem("triageCustomAccent");
+}
+
+function applyCustomColor() {
+  const a1=document.getElementById("colorAccent1").value;
+  const a2=document.getElementById("colorAccent2").value;
+  const a3=document.getElementById("colorAccent3").value;
+  const b1=document.getElementById("colorBtn").value;
+  applyVars(a1,a2,a3,b1,b1);
+  document.querySelectorAll(".swatch").forEach(s=>s.classList.remove("active"));
+  localStorage.setItem("triageCustomAccent",JSON.stringify({a1,a2,a3,b1}));
+  localStorage.removeItem("triagePreset");
+}
+
+function applyFont() {
+  const f = document.getElementById("fontPicker").value;
+  document.documentElement.style.setProperty("--font-heading", f);
+  localStorage.setItem("triageFont", f);
+}
+
+function toggleThemePanel() { document.getElementById("themePanel").classList.toggle("open"); }
+
+/* -----------------------------------------------------------
+   SAVED PRESETS (combo of mode + accent + font, user-named)
+----------------------------------------------------------- */
+function getSavedPresets() {
+  try { return JSON.parse(localStorage.getItem("triageSavedPresets") || "{}"); }
+  catch(e) { return {}; }
+}
+
+function saveSavedPresets(obj) {
+  localStorage.setItem("triageSavedPresets", JSON.stringify(obj));
+}
+
+function saveCurrentAsPreset() {
+  const nameInput = document.getElementById("presetNameInput");
+  const name = (nameInput.value || "").trim();
+  if (!name) { alert("Give your preset a name first."); return; }
+
+  const font = document.getElementById("fontPicker").value;
+  const saved = getSavedPresets();
+  saved[name] = { mode: currentMode, accent: currentAccent, font };
+  saveSavedPresets(saved);
+  nameInput.value = "";
+  renderSavedPresets();
+}
+
+function applySavedPreset(name) {
+  const saved = getSavedPresets();
+  const p = saved[name]; if (!p) return;
+  applyMode(p.mode);
+  applyVars(p.accent.a1, p.accent.a2, p.accent.a3, p.accent.b1, p.accent.b2 || p.accent.b1);
+  document.getElementById("colorAccent1").value = p.accent.a1;
+  document.getElementById("colorAccent2").value = p.accent.a2;
+  document.getElementById("colorAccent3").value = p.accent.a3;
+  document.getElementById("colorBtn").value     = p.accent.b1;
+  document.querySelectorAll(".swatch").forEach(s=>s.classList.remove("active"));
+  if (p.font) {
+    document.getElementById("fontPicker").value = p.font;
+    document.documentElement.style.setProperty("--font-heading", p.font);
+    localStorage.setItem("triageFont", p.font);
+  }
+  localStorage.setItem("triageCustomAccent", JSON.stringify(p.accent));
+  localStorage.removeItem("triagePreset");
+}
+
+function deleteSavedPreset(name) {
+  const saved = getSavedPresets();
+  delete saved[name];
+  saveSavedPresets(saved);
+  renderSavedPresets();
+}
+
+function renderSavedPresets() {
+  const saved = getSavedPresets();
+  const names = Object.keys(saved);
+  const container = document.getElementById("savedPresetsList");
+  if (!container) return;
+  if (!names.length) {
+    container.innerHTML = `<p style="color:var(--text-faint);font-size:12px">No saved presets yet.</p>`;
+    return;
+  }
+  container.innerHTML = names.map(n => `
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--surface-soft);border-radius:10px;margin-bottom:6px">
+      <span style="font-size:12.5px;cursor:pointer;flex:1" onclick="applySavedPreset('${escH(n)}')">⭐ ${n}</span>
+      <button class="btn-sm btn-red" style="padding:4px 9px" onclick="deleteSavedPreset('${escH(n)}')"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+  `).join("");
+}
+
+function initTheme() {
+  const mode = localStorage.getItem("triageMode") || "beta";
+  applyMode(mode);
+
+  const custom = localStorage.getItem("triageCustomAccent");
+  const preset = localStorage.getItem("triagePreset") || "ocean";
+  const font   = localStorage.getItem("triageFont");
+
+  if (custom) {
+    try {
+      const c = JSON.parse(custom);
+      applyVars(c.a1,c.a2,c.a3,c.b1,c.b1);
+      document.getElementById("colorAccent1").value = c.a1;
+      document.getElementById("colorAccent2").value = c.a2;
+      document.getElementById("colorAccent3").value = c.a3;
+      document.getElementById("colorBtn").value     = c.b1;
+    } catch(e) {}
+  } else {
+    applyPreset(preset);
+  }
+
+  if (font) {
+    document.getElementById("fontPicker").value = font;
+    document.documentElement.style.setProperty("--font-heading", font);
+  }
+
+  renderSavedPresets();
+}
+
+document.addEventListener("click", e => {
+  const panel=document.getElementById("themePanel"), fab=document.getElementById("themeFab");
+  if(panel.classList.contains("open")&&!panel.contains(e.target)&&e.target!==fab) panel.classList.remove("open");
+});
+
+/* ================================================================
+   SVG ICON SYSTEM — white outline pictographs
+================================================================ */
+function icon(name, size=16, color="currentColor") {
+  const s = `width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="${color}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"`;
+  const paths = {
+    mic:        `<path d="M12 1a3 3 0 0 1 3 3v8a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/>`,
+    microscope: `<path d="M6 18h8"/><path d="M3 21h18"/><path d="M14 21a7 7 0 1 0-6.7-9"/><path d="M9 3h1"/><path d="M13 3h1"/><path d="M9 3v5l2 2"/><path d="M14 3v5l-1 1"/>`,
+    speaker:    `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>`,
+    speakerOff: `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/>`,
+    speakerLow: `<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>`,
+    bed:        `<path d="M2 4v16"/><path d="M2 8h18a2 2 0 0 1 2 2v10"/><path d="M2 17h20"/><path d="M6 8v9"/>`,
+    refresh:    `<polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>`,
+    bot:        `<rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><line x1="8" y1="16" x2="8" y2="16"/><line x1="16" y1="16" x2="16" y2="16"/>`,
+    palette:    `<circle cx="13.5" cy="6.5" r=".5"/><circle cx="17.5" cy="10.5" r=".5"/><circle cx="8.5" cy="7.5" r=".5"/><circle cx="6.5" cy="12.5" r=".5"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>`,
+    music:      `<path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>`,
+    warning:    `<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>`,
+    trash:      `<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>`,
+    lightning:  `<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>`,
+    cycle:      `<polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/>`,
+    clipboard:  `<path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>`,
+    hospital:   `<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/><line x1="12" y1="7" x2="12" y2="11"/><line x1="10" y1="9" x2="14" y2="9"/>`,
+    bell:       `<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>`,
+    clock:      `<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>`,
+    globe:      `<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>`,
+    flag:       `<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>`,
+    skull:      `<circle cx="12" cy="11" r="8"/><path d="M9 17v2a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-2"/><path d="M9 13h.01M15 13h.01M9.5 10a2.5 2.5 0 1 1 5 0"/>`,
+    close:      `<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>`,
+    check:      `<polyline points="20 6 9 17 4 12"/>`,
+    play:       `<polygon points="5 3 19 12 5 21 5 3"/>`,
+    pause:      `<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>`,
+    search:     `<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>`,
+    upload:     `<polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/>`,
+    timeline:   `<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><circle cx="12" cy="12" r="4"/><path d="M4.93 4.93l2.83 2.83"/><path d="M16.24 16.24l2.83 2.83"/><path d="M2 12h4"/><path d="M18 12h4"/>`,
+    notes:      `<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>`,
+    enter:      `<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>`,
+    priority:   `<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>`,
+    extend:     `<rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>`,
+  };
+  const inner = paths[name] || `<circle cx="12" cy="12" r="10"/>`;
+  return `<svg ${s} style="display:inline-block;vertical-align:middle;flex-shrink:0">${inner}</svg>`;
+}
+
+/* helper: icon + label span */
+function iconBtn(iconName, label, size=15) {
+  return `${icon(iconName,size)} <span style="vertical-align:middle">${label}</span>`;
+}
+
+/* ================================================================
+   LANGUAGE SEARCH
+================================================================ */
+function buildLangDropdown(filter) {
+  const dd = document.getElementById("langDropdown");
+  const q = (filter||"").toLowerCase();
+  const matches = ALL_LANGUAGES.filter(([name])=> !q || name.toLowerCase().includes(q));
+  dd.innerHTML = matches.slice(0,12).map(([name,code,noVoice])=>
+    `<div class="lang-opt" onmousedown="selectLanguage('${name}','${code}',${!!noVoice})">${name}${noVoice?' <span style="color:var(--text-faint);font-size:11px">(text only)</span>':''}</div>`
+  ).join("") + (matches.length===0 ? `<div class="lang-opt" style="color:var(--text-faint)">No matches</div>` : "");
+}
+
+function filterLanguages() { buildLangDropdown(document.getElementById("langSearch").value); }
+function openLangDropdown() { buildLangDropdown(document.getElementById("langSearch").value); document.getElementById("langDropdown").classList.add("open"); }
+function closeLangDropdown(){ document.getElementById("langDropdown").classList.remove("open"); }
+
+let selectedLangNoVoice = false;
+
+function selectLanguage(name, code, noVoice) {
+  selectedLanguage = name;
+  selectedLangNoVoice = !!noVoice;
+  document.getElementById("language").value  = name;
+  document.getElementById("langSearch").value = name;
+  document.getElementById("langDropdown").classList.remove("open");
+}
+
+function initLanguageSearch() {
+  selectLanguage("English","en-US",false);
+  buildLangDropdown("");
+}
+
+/* ================================================================
+   TABS
+================================================================ */
+function switchTab(name) {
+  document.querySelectorAll(".tabPanel").forEach(p=>p.classList.remove("active"));
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  const panel = document.getElementById("tab-"+name);
+  if(panel) panel.classList.add("active");
+  document.querySelectorAll(".tab").forEach(t=>{
+    const txt = t.textContent.toLowerCase();
+    if (name==="intake"&&txt.includes("intake")) t.classList.add("active");
+    else if(name==="queue"&&txt.includes("queue")) t.classList.add("active");
+    else if(name==="beds"&&txt.includes("beds")) t.classList.add("active");
+    else if(name==="analytics"&&txt.includes("analytics")) t.classList.add("active");
+    else if(name==="chatbot"&&txt.includes("chatbot")) t.classList.add("active");
+    else if(name==="audit"&&txt.includes("archive")) t.classList.add("active");
+  });
+  if(name==="queue")    loadQueue();
+  if(name==="beds")     loadBeds();
+  if(name==="analytics")loadAnalytics();
+  if(name==="audit")    { loadAudit(); loadArchive(); }
+}
+
+/* ================================================================
+   APP INIT
+================================================================ */
+function initApp() {
+  initLanguageSearch();
+  loadSymptomIcons();
+  loadQueue();
+  loadAnalytics();
+  checkCriticalBanner();
+  setInterval(loadQueue,5000);
+  setInterval(loadAnalytics,12000);
+  setInterval(checkCriticalBanner,9000);
+}
+
+/* ================================================================
+   TRIAGE
+================================================================ */
+async function processTriage() {
+  if(isProcessing) return;
+  isProcessing = true;
+  try {
+    const name     = document.getElementById("name").value.trim();
+    const language = document.getElementById("language").value || "English";
+    const symptoms = document.getElementById("symptoms").value.trim();
+    const age      = document.getElementById("age").value ? parseInt(document.getElementById("age").value) : null;
+    if(!name)    { setError("Please enter a patient name."); isProcessing=false; return; }
+    if(!symptoms){ setError("Please enter symptoms.");       isProcessing=false; return; }
+    setLoading("Analyzing with AI…");
+    const res = await fetch(`${API}/analyze`,{
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({name,language,symptoms,age})
+    });
+    if(!res.ok) throw new Error("Server error "+res.status);
+    const data = await res.json();
+    latestResult = data;
+    renderResult(data);
+    setSuccess("Analysis complete ✓");
+    loadQueue(); loadAnalytics(); checkCriticalBanner();
+  } catch(err){ console.error(err); setError(err.message); }
+  finally { isProcessing=false; }
+}
+
+function renderResult(data) {
+  document.getElementById("resultCard").classList.remove("hidden");
+  document.getElementById("esiLabel").innerHTML    = `<span class="badge ${esiClass(data.esi)}">${data.esi_label||data.esi||"?"}</span>`;
+  document.getElementById("confidence").innerText  = data.confidence!=null ? (data.confidence*100).toFixed(0)+"%" : "—";
+  document.getElementById("humanReview").innerText = data.requires_human_review ? "<svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#fbbf24\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:inline-block;vertical-align:middle;margin-right:3px\"><path d=\"M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/></svg> Yes" : "No";
+  document.getElementById("waitTime").innerText    = data.wait_time_estimate || "—";
+  document.getElementById("translation").innerText = data.translation || "—";
+  document.getElementById("rationale").innerText   = data.rationale   || "—";
+  document.getElementById("instructions").innerText= data.patient_instructions || "—";
+  document.getElementById("alerts").innerHTML    = badge(data.alerts,    "warning");
+  document.getElementById("anatomy").innerHTML   = badge(data.anatomy,   "tag");
+  document.getElementById("vitals").innerHTML    = badge(data.vitals,    "tag");
+  document.getElementById("allergies").innerHTML = badge(data.allergies, "warning");
+  document.getElementById("medications").innerHTML=badge(data.medications,"tag");
+}
+
+/* ================================================================
+   VOICE
+================================================================ */
+function startVoiceInput(){
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){alert("Speech not supported.");return;}
+  const rec=new SR();
+  const lang=ALL_LANGUAGES.find(([n])=>n===selectedLanguage);
+  if (selectedLangNoVoice) {
+    rec.lang = "en-US";
+    document.getElementById("voiceStatus").innerHTML =
+      `No voice recognition for ${selectedLanguage} — listening in English, or type symptoms directly.`;
+  } else {
+    rec.lang = lang ? lang[1] : "en-US";
+  }
+  rec.interimResults=true; rec.maxAlternatives=1; rec.continuous=false;
+  rec.onstart =()=>{ if(!selectedLangNoVoice) document.getElementById("voiceStatus").innerHTML="<svg width=\"13\" height=\"13\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\" style=\"display:inline-block;vertical-align:middle;margin-right:4px\"><path d=\"M12 1a3 3 0 0 1 3 3v8a3 3 0 0 1-6 0V4a3 3 0 0 1 3-3z\"/><path d=\"M19 10v2a7 7 0 0 1-14 0v-2\"/><line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"23\"/><line x1=\"8\" y1=\"23\" x2=\"16\" y2=\"23\"/></svg> Listening…"; };
+  rec.onresult=(e)=>{ let t=""; for(let i=0;i<e.results.length;i++) t+=e.results[i][0].transcript; document.getElementById("symptoms").value=t; };
+  rec.onerror =(e)=>{ document.getElementById("voiceStatus").innerHTML="Error: "+e.error; isProcessing=false; };
+  rec.onend   =()=>{
+    const s=document.getElementById("symptoms").value.trim();
+    const n=document.getElementById("name").value.trim();
+    if(s&&n){ document.getElementById("voiceStatus").innerHTML="Captured. Analyzing…"; processTriage(); }
+    else document.getElementById("voiceStatus").innerHTML=s?"Captured. Press Analyze when ready.":"No speech detected.";
+  };
+  rec.start();
+}
+
+function speakInstructions(){
+  if(!latestResult) return;
+  speechSynthesis.speak(new SpeechSynthesisUtterance(latestResult.patient_instructions));
+}
+
+/* ================================================================
+   STATUS
+================================================================ */
+function setLoading(t){ document.getElementById("status").innerHTML=`<p class="loading">⏳ ${t}</p>`; }
+function setSuccess(t){ document.getElementById("status").innerHTML=`<p class="success">✓ ${t}</p>`; }
+function setError(t)  { document.getElementById("status").innerHTML=`<p class="error">✗ ${t}</p>`; }
+
+/* ================================================================
+   HELPERS
+================================================================ */
+function badge(list,cls){ if(!list||!list.length) return `<span class="badge info">None</span>`; return list.map(i=>`<span class="badge ${cls}">${i}</span>`).join(""); }
+function esiClass(esi){ return {"ESI-1":"esi1","ESI-2":"esi2","ESI-3":"esi3","ESI-4":"esi4","ESI-5":"esi5"}[esi]||"esi5"; }
+function esiBorder(esi){ return ["ESI-1","ESI-2"].includes(esi)?"esi-critical":esi==="ESI-3"?"esi-urgent":""; }
+function flagBadge(f){ if(!f)return""; const m={"priority":"flag-priority Priority","extended":"flag-extended Extended Stay","deceased":"flag-deceased Deceased"}; const v=m[f]; return v?`<span class="badge ${v.split(' ')[0]}">${v.slice(v.indexOf(' ')+1)}</span>`:""; }
+function escH(s){ return(s||"").replace(/'/g,"\\'").replace(/"/g,"&quot;"); }
+function setText(id,v){ const el=document.getElementById(id); if(el)el.innerText=v??"—"; }
+
+/* ================================================================
+   QUEUE
+================================================================ */
+async function loadQueue(){
+  try {
+    const data = await fetch(`${API}/queue`).then(r=>r.json());
+    const c = document.getElementById("queue");
+    c.innerHTML="";
+    if(!data.length){ c.innerHTML="<p style='color:var(--text-dim)'>No patients waiting.</p>"; return; }
+    data.forEach(p=>{
+      const esi=p?.result?.esi||"ESI-5";
+      const d=document.createElement("div");
+      d.className=`queueCard ${esiBorder(esi)}`; d.style.cursor="pointer";
+      d.innerHTML=`
+        <div class="queueHeader">
+          <div class="patientName">${p.name||"Unknown"}${p.age?` <span style="font-weight:400;color:var(--text-faint);font-size:13px">(${p.age}y)</span>`:""}</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            ${flagBadge(p.patient_flag)}
+            <span class="badge ${esiClass(esi)}">${esi}</span>
+          </div>
+        </div>
+        <div class="patientInfo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${p.waiting_minutes??0} min &nbsp;|&nbsp; <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> ${p.language||"—"}</div>
+        <div class="patientInfo" style="margin-top:4px">${p.symptoms||""}</div>
+        <div class="patientInfo" style="color:var(--text-dimmer);font-size:11px;margin-top:8px">Tap to open</div>`;
+      d.addEventListener("click",()=>openPatientPanel(p));
+      c.appendChild(d);
+    });
+  } catch(e){ console.error(e); }
+}
+
+/* ================================================================
+   BEDS
+================================================================ */
+async function loadBeds(){
+  try {
+    const data = await fetch(`${API}/beds`).then(r=>r.json());
+    const c=document.getElementById("beds"); c.innerHTML="";
+    if(!data.length){ c.innerHTML="<p style='color:var(--text-dim)'>No patients in treatment.</p>"; return; }
+    data.forEach(p=>{
+      const esi=p?.result?.esi||"ESI-5";
+      const d=document.createElement("div"); d.className="bedCard"; d.style.cursor="pointer";
+      d.innerHTML=`
+        <div class="queueHeader">
+          <div class="patientName">${p.name||"Unknown"}${p.age?` <span style="font-weight:400;color:var(--text-faint);font-size:13px">(${p.age}y)</span>`:""}</div>
+          <div style="display:flex;gap:6px;align-items:center">
+            ${flagBadge(p.patient_flag)}
+            <span class="badge ${esiClass(esi)}">${esi}</span>
+          </div>
+        </div>
+        <div class="patientInfo"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> ${p.language||"—"} &nbsp;|&nbsp; ${p.symptoms||""}</div>
+        ${p.treatment_notes?`<div class="patientInfo" style="color:#86efac;margin-top:6px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>${p.treatment_notes}</div>`:""}
+        <div class="patientInfo" style="color:var(--text-dimmer);font-size:11px;margin-top:8px">Tap to open</div>`;
+      d.addEventListener("click",()=>openPatientPanel(p));
+      c.appendChild(d);
+    });
+  } catch(e){ console.error(e); }
+}
+
+/* ================================================================
+   MOVE / DISCHARGE
+================================================================ */
+async function moveToBed(id){
+  try { const r=await fetch(`${API}/move_to_bed`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})}); if(!r.ok)throw new Error(); loadQueue(); loadBeds(); } catch(e){ alert("Error: "+e.message); }
+}
+async function dischargePatient(id,name){
+  if(!confirm(`Discharge ${name}?`)) return;
+  try { const r=await fetch(`${API}/discharge`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id})}); if(!r.ok)throw new Error(); loadBeds(); loadAnalytics(); } catch(e){ alert("Error: "+e.message); }
+}
+
+/* ================================================================
+   OVERRIDE
+================================================================ */
+function openOverride(id){ document.getElementById("overridePatientId").value=id; document.getElementById("overrideDoctor").value=""; document.getElementById("overrideReason").value=""; openModal("overrideModal"); }
+async function submitOverride(){
+  const id=document.getElementById("overridePatientId").value;
+  const doctor=document.getElementById("overrideDoctor").value.trim()||"Unknown";
+  const esi=document.getElementById("overrideEsi").value;
+  const reason=document.getElementById("overrideReason").value.trim();
+  if(!reason){alert("Enter a reason.");return;}
+  try { const r=await fetch(`${API}/override`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,esi,reason,doctor})}); if(!r.ok)throw new Error(); closeModal("overrideModal"); loadQueue(); } catch(e){ alert("Error: "+e.message); }
+}
+
+/* ================================================================
+   RECHECK
+================================================================ */
+function openRecheck(id,symptoms){ document.getElementById("recheckPatientId").value=id; document.getElementById("recheckSymptoms").value=symptoms; openModal("recheckModal"); }
+async function submitRecheck(){
+  const id=document.getElementById("recheckPatientId").value;
+  const symptoms=document.getElementById("recheckSymptoms").value.trim();
+  if(!symptoms){alert("Enter symptoms.");return;}
+  try { const r=await fetch(`${API}/recheck`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,symptoms})}); if(!r.ok)throw new Error(); closeModal("recheckModal"); loadQueue(); } catch(e){ alert("Error: "+e.message); }
+}
+
+/* ================================================================
+   TREATMENT NOTES
+================================================================ */
+function openNotes(id,ex){ document.getElementById("notesPatientId").value=id; document.getElementById("notesText").value=ex; openModal("notesModal"); }
+async function submitNotes(){
+  const id=document.getElementById("notesPatientId").value;
+  const notes=document.getElementById("notesText").value;
+  try { const r=await fetch(`${API}/treatment_notes`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id,notes})}); if(!r.ok)throw new Error(); closeModal("notesModal"); loadBeds(); } catch(e){ alert("Error: "+e.message); }
+}
+
+/* ================================================================
+   PATIENT FLAG
+================================================================ */
+async function setFlag(flag){
+  if(!currentPanelPatient) return;
+  try {
+    const r=await fetch(`${API}/flag`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:currentPanelPatient.id,flag})});
+    if(!r.ok)throw new Error();
+    currentPanelPatient.patient_flag=flag;
+    // update badges
+    document.getElementById("panelBadges").innerHTML=buildPanelBadges(currentPanelPatient);
+    loadQueue(); loadBeds();
+  } catch(e){ alert("Error: "+e.message); }
+}
+
+/* ================================================================
+   PATIENT PANEL
+================================================================ */
+function buildPanelBadges(p){
+  const esi=p?.result?.esi||"ESI-5";
+  return `<span class="badge ${esiClass(esi)}">${esi}</span>`
+       +(p.doctor_override?`<span class="badge warning" style="margin-left:6px">Overridden</span>`:"")
+       +(p?.result?.requires_human_review?`<span class="badge warning" style="margin-left:6px">Review</span>`:"")
+       +(p.patient_flag?flagBadge(p.patient_flag):"");
+}
+
+function openPatientPanel(p){
+  currentPanelPatient=p;
+  const isT=p.status==="In Treatment";
+  document.getElementById("panelName").textContent=p.name||"Unknown";
+  document.getElementById("panelMeta").textContent=`<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> ${p.language||"—"}  |  ${p.status}${p.age?`  |  Age: ${p.age}`:""} |  Waiting: ${p.waiting_minutes??0} min`;
+  document.getElementById("panelBadges").innerHTML=buildPanelBadges(p);
+  document.getElementById("panelBedBtn").style.display      =isT?"none":"inline-block";
+  document.getElementById("panelOverrideBtn").style.display =isT?"none":"inline-block";
+  document.getElementById("panelRecheckBtn").style.display  =isT?"none":"inline-block";
+  document.getElementById("panelNotesBtn").style.display    =isT?"inline-block":"none";
+  document.getElementById("panelDischargeBtn").style.display=isT?"inline-block":"none";
+  document.getElementById("conditionNote").value="";
+  renderPanelTimeline(p);
+  document.getElementById("patientPanel").classList.add("open");
+  document.body.style.overflow="hidden";
+}
+
+function closePatientPanel(){ document.getElementById("patientPanel").classList.remove("open"); document.body.style.overflow=""; currentPanelPatient=null; }
+
+function renderPanelTimeline(p){
+  const track=document.getElementById("panelTimeline");
+  const hist=p.history||[];
+  if(!hist.length){ track.innerHTML="<p style='color:var(--text-dim);font-size:13px'>No entries yet.</p>"; return; }
+  track.innerHTML=hist.map(h=>{
+    if(h.type==="condition_log"){
+      const t=h.timestamp?new Date(h.timestamp).toLocaleString():"";
+      return `<div class="tlEntry condition-entry"><div class="tlTime">${t}</div><div class="tlBody"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>${h.note}</div></div>`;
+    }
+    if(h.type==="flag_entry"){
+      const t=h.timestamp?new Date(h.timestamp).toLocaleString():"";
+      return `<div class="tlEntry flag-entry"><div class="tlTime">${t}</div><div class="tlBody">${h.note}</div></div>`;
+    }
+    const esi=h.esi||"ESI-?";
+    const conf=h.confidence!=null?(h.confidence*100).toFixed(0)+"%":"";
+    return `<div class="tlEntry triage-entry">
+      <div class="tlTime">Triage assessment</div>
+      <div class="tlBody">
+        <span class="badge ${esiClass(esi)}" style="font-size:11px">${esi}</span>
+        ${conf?`<span class="badge info" style="font-size:11px;margin-left:3px">${conf}</span>`:""}
+        <p style="margin-top:7px;font-size:12.5px;color:var(--text-muted)">${h.rationale||""}</p>
+      </div>
+    </div>`;
+  }).join("");
+}
+
+async function submitConditionLog(){
+  if(!currentPanelPatient) return;
+  const note=document.getElementById("conditionNote").value.trim();
+  if(!note){alert("Enter a note.");return;}
+  try {
+    const r=await fetch(`${API}/timeline/${currentPanelPatient.id}`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({note})});
+    if(!r.ok)throw new Error();
+    const data=await r.json();
+    currentPanelPatient.history.push(data.entry);
+    renderPanelTimeline(currentPanelPatient);
+    document.getElementById("conditionNote").value="";
+  } catch(e){ alert("Error: "+e.message); }
+}
+
+function openOverrideFromPanel(){ if(!currentPanelPatient)return; closePatientPanel(); openOverride(currentPanelPatient.id); }
+function openRecheckFromPanel() { if(!currentPanelPatient)return; closePatientPanel(); openRecheck(currentPanelPatient.id,currentPanelPatient.symptoms||""); }
+function moveToBedFromPanel()   { if(!currentPanelPatient)return; const id=currentPanelPatient.id; closePatientPanel(); moveToBed(id); }
+function openNotesFromPanel()   { if(!currentPanelPatient)return; const p=currentPanelPatient; closePatientPanel(); openNotes(p.id,p.treatment_notes||""); }
+function dischargeFromPanel()   { if(!currentPanelPatient)return; const p=currentPanelPatient; closePatientPanel(); dischargePatient(p.id,p.name); }
+
+document.getElementById("patientPanel").addEventListener("click",e=>{ if(e.target===document.getElementById("patientPanel"))closePatientPanel(); });
+
+/* ================================================================
+   ANALYTICS
+================================================================ */
+async function loadAnalytics(){
+  try {
+    const data=await fetch(`${API}/analytics`).then(r=>r.json());
+    setText("patientsWaiting",data.patients_waiting);
+    setText("patientsInTreatment",data.patients_in_treatment);
+    setText("criticalCases",data.critical_cases);
+    setText("patientsDischarge",data.patients_discharged);
+    setText("avgWait",data.average_wait);
+    setText("oldestWait",data.oldest_wait);
+    setText("avgConfidence",(data.average_confidence*100).toFixed(0)+"%");
+    setText("avgTreatment",data.average_treatment_minutes);
+    const hp=data.highest_priority;
+    document.getElementById("highestPriority").innerHTML=hp
+      ?`<strong>${hp.name}</strong><br><span class="badge ${esiClass(hp.esi)}">${hp.esi}</span> <span style="color:var(--text-dim);font-size:12px">${hp.waiting_minutes}m</span>`
+      :"None";
+    document.getElementById("languages").innerHTML=Object.entries(data.languages||{}).map(([l,c])=>`<span class="badge tag">${l}: ${c}</span>`).join("");
+    document.getElementById("esiDistribution").innerHTML=Object.entries(data.esi_distribution||{}).map(([e,c])=>`<span class="badge ${esiClass(e)}">${e}: ${c}</span>`).join("");
+  } catch(e){ console.error(e); }
+}
+
+/* ================================================================
+   SYMPTOM ICONS
+================================================================ */
+
+async function loadSymptomIcons() {
+  try {
+    const res = await fetch(`${API}/symptom_icons`);
+    if (!res.ok) throw new Error("Failed to fetch symptom telemetry maps");
+    const data = await res.json();
+    const container = document.getElementById("symptomIcons");
+    if (!container) return;
+    
+    container.innerHTML = "";
+    selectedSymptoms = [];
+
+    data.forEach(s => {
+      const card = document.createElement("div");
+      card.style.cssText = `
+        background: var(--surface-soft, rgba(255,255,255,.05));
+        border: 1px solid var(--border-soft, rgba(255,255,255,.09));
+        border-radius: 18px;
+        padding: 16px;
+        text-align: center;
+        cursor: pointer;
+        transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+      `;
+      card.innerHTML = `
+        <div style="font-size: 36px; margin-bottom: 8px; user-select: none;">${s.emoji}</div>
+        <div style="font-size: 13px; font-weight: 600; color: var(--text-soft);">${s.name}</div>
+      `;
+      
+      // Animations & interactions
+      card.onmouseenter = () => { card.style.transform = "scale(1.05)"; };
+      card.onmouseleave = () => { if(!card.classList.contains("selected")) card.style.transform = "none"; };
+
+      card.onclick = () => {
+        card.classList.toggle("selected");
+        if (card.classList.contains("selected")) {
+          card.style.background = "rgba(59, 130, 246, 0.2)";
+          card.style.borderColor = "var(--a1)";
+          selectedSymptoms.push(s.name);
+        } else {
+          card.style.background = "var(--surface-soft)";
+          card.style.borderColor = "var(--border-soft)";
+          selectedSymptoms = selectedSymptoms.filter(item => item !== s.name);
+        }
+        
+        // Dynamically populates your original symptoms textarea box
+        const textLog = document.getElementById("symptoms");
+        if (textLog) {
+          textLog.value = selectedSymptoms.length > 0 
+            ? `Patient presents with: ${selectedSymptoms.join(", ")}.` 
+            : "";
+        }
+      };
+      container.appendChild(card);
+    });
+  } catch (e) {
+    console.error("Initialization error on Picture Selector module:", e);
+  }
+}
+
+/* ================================================================
+   CRITICAL BANNER
+================================================================ */
+async function checkCriticalBanner(){
+  try {
+    const data=await fetch(`${API}/critical_banner`).then(r=>r.json());
+    const b=document.getElementById("criticalBanner");
+    if(data.critical&&data.message){ document.getElementById("criticalBannerText").innerText=data.message; b.style.display="block"; }
+    else b.style.display="none";
+  } catch(e){}
+}
+
+/* ================================================================
+   SEARCH
+================================================================ */
+async function searchPatients(){
+  const q=document.getElementById("searchInput").value.trim();
+  if(!q){loadQueue();return;}
+  try {
+    const data=await fetch(`${API}/search?q=${encodeURIComponent(q)}`).then(r=>r.json());
+    const c=document.getElementById("queue"); c.innerHTML="";
+    if(!data.length){c.innerHTML="<p style='color:var(--text-dim)'>No matches.</p>";return;}
+    data.forEach(p=>{
+      const esi=p?.result?.esi||"ESI-5";
+      const d=document.createElement("div"); d.className=`queueCard ${esiBorder(esi)}`; d.style.cursor="pointer";
+      d.innerHTML=`<div class="queueHeader"><div class="patientName">${p.name}</div><span class="badge ${esiClass(esi)}">${esi}</span></div><div class="patientInfo">${p.symptoms}</div>`;
+      d.addEventListener("click",()=>openPatientPanel(p));
+      c.appendChild(d);
+    });
+  } catch(e){ console.error(e); }
+}
+
+/* ================================================================
+   MEDICAL CHATBOT
+================================================================ */
+async function sendChat(){
+  const input=document.getElementById("chatInput");
+  const q=input.value.trim(); if(!q)return;
+  appendChat("user",q); input.value="";
+  try {
+    const data=await fetch(`${API}/assistant`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({question:q})}).then(r=>r.json());
+    appendChat("bot",data.answer);
+  } catch(e){ appendChat("bot","Error: "+e.message); }
+}
+
+function appendChat(role,text){
+  const c=document.getElementById("chatMessages");
+  const d=document.createElement("div"); d.className=`chatBubble ${role}`;
+  d.innerText=(role==="user"?"You: ":`<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><rect x="3" y="11" width="18" height="10" rx="2"/><circle cx="12" cy="5" r="2"/><path d="M12 7v4"/><circle cx="8.5" cy="16" r="1" fill="currentColor"/><circle cx="15.5" cy="16" r="1" fill="currentColor"/></svg> Chatbot: `)+text;
+  c.appendChild(d); c.scrollTop=c.scrollHeight;
+}
+
+async function clearChat(){
+  try { await fetch(`${API}/clear_chat`,{method:"POST"}); document.getElementById("chatMessages").innerHTML=""; } catch(e){}
+}
+
+/* ================================================================
+   AUDIT / ARCHIVE
+================================================================ */
+async function loadAudit(){
+  try {
+    const data=await fetch(`${API}/audit`).then(r=>r.json());
+    const events=(data.events||[]).slice().reverse();
+    const c=document.getElementById("auditList");
+    if(!events.length){c.innerHTML="<p style='color:var(--text-dim)'>No events yet.</p>";return;}
+    c.innerHTML=events.map(e=>`
+      <div style="padding:9px 15px;margin:5px 0;background:rgba(255,255,255,.04);border-radius:11px;font-size:12.5px">
+        <span style="color:var(--a1);font-weight:700">${e.action}</span> — ${e.patient||""}
+        ${e.esi?`<span class="badge ${esiClass(e.esi)}" style="margin-left:7px;font-size:11px">${e.esi}</span>`:""}
+        <span style="float:right;color:var(--text-dimmer)">${new Date(e.timestamp).toLocaleTimeString()}</span>
+      </div>`).join("");
+  } catch(e){ console.error(e); }
+}
+
+async function loadArchive(){
+  try {
+    const data=await fetch(`${API}/archive`).then(r=>r.json());
+    const c=document.getElementById("archiveList");
+    if(!data.length){c.innerHTML="<p style='color:var(--text-dim)'>No discharged patients.</p>";return;}
+    c.innerHTML=data.map(p=>`
+      <div style="padding:13px 16px;margin:7px 0;background:rgba(255,255,255,.04);border-radius:13px;border-left:4px solid #334155">
+        <strong>${p.name}</strong>${p.age?` <span style="color:var(--text-dim);font-size:12px">(${p.age}y)</span>`:""} <span style="color:var(--text-dim);font-size:12px;margin-left:8px">${p.language}</span>
+        <p style="margin-top:5px;font-size:12.5px;color:var(--text-faint)">${p.symptoms}</p>
+        ${p.treatment_notes?`<p style="font-size:12.5px;color:#86efac;margin-top:3px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#86efac" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:middle;margin-right:3px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>${p.treatment_notes}</p>`:""}
+      </div>`).join("");
+  } catch(e){ console.error(e); }
+}
+
+/* ================================================================
+   WIPE ALL DATA
+================================================================ */
+function confirmWipeData() {
+  document.getElementById("wipeConfirmInput").value = "";
+  openModal("wipeModal");
+}
+
+async function executeWipeData() {
+  const typed = document.getElementById("wipeConfirmInput").value.trim();
+  if (typed !== "DELETE") {
+    alert('Please type DELETE exactly to confirm.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`${API}/wipe_all_data`, { method: "POST" });
+    if (!res.ok) throw new Error("Server error " + res.status);
+
+    closeModal("wipeModal");
+
+    // Refresh every view so the wipe is reflected immediately
+    loadQueue();
+    loadBeds();
+    loadAnalytics();
+    loadAudit();
+    loadArchive();
+    checkCriticalBanner();
+    document.getElementById("chatMessages").innerHTML = "";
+    document.getElementById("resultCard").classList.add("hidden");
+
+    setSuccess("All patient data wiped.");
+  } catch (e) {
+    alert("Error wiping data: " + e.message);
+  }
+}
+
+/* ================================================================
+   MODALS
+================================================================ */
+function openModal(id) { document.getElementById(id).classList.add("open"); }
+function closeModal(id){ document.getElementById(id).classList.remove("open"); }
+document.querySelectorAll(".modal-backdrop").forEach(b=>{
+  b.addEventListener("click",e=>{ if(e.target===b) b.classList.remove("open"); });
+});
+
+/* ================================================================
+   STARTUP
+================================================================ */
+window.addEventListener("DOMContentLoaded",()=>{
+  initTheme();
+  initParallax();
+  spawnParticles();
+  spawnCodeRain();
+  buildLangDropdown("");
+});
+</script>
+</body>
+</html>
