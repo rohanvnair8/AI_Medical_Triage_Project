@@ -15,27 +15,20 @@ load_dotenv()
 app = Flask(__name__)
 CORS(app)
 
+
 # =========================
-# ENVIRONMENT CONFIG
+# GEMINI SETUP
 # =========================
 
-GEMINI_API_KEY = (os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY") or "").strip()
+client = genai.Client(
+    api_key=os.getenv("GEMINI_API_KEY")
+)
 
-if GEMINI_API_KEY:
-    client = genai.Client(api_key=GEMINI_API_KEY)
-else:
+# Guard: if no API key, set client to None so we return clean fallback responses
+# instead of crashing on every triage request
+if not os.getenv("GEMINI_API_KEY", "").strip():
     client = None
     print("WARNING: GEMINI_API_KEY is not set. AI triage will use fallback responses.")
-
-# =========================
-# MUSIC UPLOAD CONFIG
-# =========================
-
-MUSIC_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "music")
-os.makedirs(MUSIC_FOLDER, exist_ok=True)
-ALLOWED_AUDIO_EXTENSIONS = {"mp3", "wav"}
-MAX_AUDIO_BYTES = 25 * 1024 * 1024  # 25MB cap per file
-
 
 # =========================
 # IN-MEMORY STORAGE
@@ -86,8 +79,6 @@ def initialize_database():
     conn.commit()
 
     # Self-migrate: if this is an older triage.db missing newer columns
-    # (e.g. from before age/patient_flag existed), add them automatically
-    # instead of requiring a manual migration step or a fresh DB.
     existing_columns = {row["name"] for row in conn.execute("PRAGMA table_info(patients)")}
     required_columns = {
         "age": "INTEGER",
@@ -181,15 +172,11 @@ Patient Statement:
     if client is None:
         return {
             "translation": symptoms,
-            "anatomy": [],
-            "vitals": [],
-            "allergies": [],
-            "medications": [],
+            "anatomy": [], "vitals": [], "allergies": [], "medications": [],
             "alerts": ["Gemini API key not configured"],
-            "esi": "ESI-3",
-            "esi_label": "Level 3: Urgent",
+            "esi": "ESI-3", "esi_label": "Level 3: Urgent",
             "confidence": 0.5,
-            "rationale": "Set GEMINI_API_KEY in your environment to enable AI triage.",
+            "rationale": "Set GEMINI_API_KEY in your .env to enable AI triage.",
             "patient_instructions": "Please wait for medical staff.",
             "wait_time_estimate": "30-60 minutes",
             "requires_human_review": True
@@ -262,7 +249,7 @@ def esi_priority(esi):
 def sort_queue():
     patient_queue.sort(
         key=lambda p: (
-            int(p["result"]["esi"].split("-")[1]),
+            int(p["result"]["esi"].split("-")[1]) if "-" in p["result"].get("esi", "") else 5,
             -p.get("waiting_minutes", 0)
         )
     )
@@ -617,10 +604,10 @@ def analytics():
     highest_priority = None
 
     for patient in patient_queue:
-        language = patient["language"]
+        language = patient["language"] or "Unknown"
         language_counts[language] = language_counts.get(language, 0) + 1
 
-        esi = patient["result"]["esi"]
+        esi = patient["result"].get("esi", "ESI-5")
         if esi in esi_counts:
             esi_counts[esi] += 1
 
@@ -638,7 +625,7 @@ def analytics():
         sort_queue()
         highest_priority = {
             "name": patient_queue[0]["name"],
-            "esi": patient_queue[0]["result"]["esi"],
+            "esi": patient_queue[0]["result"].get("esi", "ESI-5"),
             "waiting_minutes": patient_queue[0].get("waiting_minutes", 0)
         }
 
@@ -677,12 +664,6 @@ def analytics():
     })
 
 # =========================
-# RANDOM QA REVIEW
-# =========================
-
-# /random_review removed
-
-# =========================
 # TEXT TO SPEECH
 # =========================
 
@@ -697,89 +678,14 @@ def speak():
 
 @app.route("/symptom_icons")
 def symptom_icons():
-    # Return icon identifiers (referencing the SVG sprite in the frontend)
     return jsonify([
-        {"name": "Chest Pain",         "icon": "icon-heart"},
-        {"name": "Headache",           "icon": "icon-brain"},
-        {"name": "Breathing Problem",  "icon": "icon-lungs"},
-        {"name": "Stomach Pain",       "icon": "icon-stomach"},
-        {"name": "Broken Bone",        "icon": "icon-bone"},
-        {"name": "Fever",              "icon": "icon-fever"}
+        {"name": "Chest Pain",         "emoji": "❤️"},
+        {"name": "Headache",           "emoji": "🧠"},
+        {"name": "Breathing Problem",  "emoji": "🫁"},
+        {"name": "Stomach Pain",       "emoji": "🤢"},
+        {"name": "Broken Bone",        "emoji": "🦴"},
+        {"name": "Fever",              "emoji": "🤒"}
     ])
-
-# =========================
-# BACKGROUND MUSIC
-# =========================
-
-def _allowed_audio(filename):
-    ext = filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
-    return ext in ALLOWED_AUDIO_EXTENSIONS
-
-
-@app.route("/music/upload", methods=["POST"])
-def music_upload():
-    if "file" not in request.files:
-        return jsonify({"error": "No file provided"}), 400
-
-    f = request.files["file"]
-    if f.filename == "":
-        return jsonify({"error": "Empty filename"}), 400
-
-    if not _allowed_audio(f.filename):
-        return jsonify({"error": "Only .mp3 and .wav files are allowed"}), 400
-
-    # Enforce size cap by reading length (Flask doesn't pre-check this for us)
-    f.seek(0, os.SEEK_END)
-    size = f.tell()
-    f.seek(0)
-    if size > MAX_AUDIO_BYTES:
-        return jsonify({"error": "File too large (25MB max)"}), 400
-
-    original_name = secure_filename(f.filename)
-    ext = original_name.rsplit(".", 1)[-1].lower()
-    stored_name = f"{uuid.uuid4().hex}.{ext}"
-    save_path = os.path.join(MUSIC_FOLDER, stored_name)
-    f.save(save_path)
-
-    display_name = original_name.rsplit(".", 1)[0] or stored_name
-
-    return jsonify({
-        "message": "Uploaded",
-        "id": stored_name,
-        "name": display_name,
-        "url": f"/static/music/{stored_name}"
-    })
-
-
-@app.route("/music/list")
-def music_list():
-    tracks = []
-    if os.path.isdir(MUSIC_FOLDER):
-        for fname in sorted(os.listdir(MUSIC_FOLDER)):
-            if _allowed_audio(fname):
-                tracks.append({
-                    "id": fname,
-                    "name": fname.rsplit(".", 1)[0],
-                    "url": f"/static/music/{fname}"
-                })
-    return jsonify(tracks)
-
-
-@app.route("/music/delete", methods=["POST"])
-def music_delete():
-    data = request.get_json()
-    track_id = data.get("id", "")
-    safe_id = secure_filename(track_id)
-
-    if not safe_id or not _allowed_audio(safe_id):
-        return jsonify({"error": "Invalid track id"}), 400
-
-    path = os.path.join(MUSIC_FOLDER, safe_id)
-    if os.path.exists(path):
-        os.remove(path)
-        return jsonify({"message": "Deleted"})
-
-    return jsonify({"error": "Track not found"}), 404
 
 # =========================
 # AI ASSISTANT
@@ -903,7 +809,7 @@ def critical_banner():
     sort_queue()
 
     for patient in patient_queue:
-        if patient["result"]["esi"] in ["ESI-1", "ESI-2"]:
+        if patient["result"].get("esi") in ["ESI-1", "ESI-2"]:
             return jsonify({
                 "critical": True,
                 "patient": patient,
@@ -975,7 +881,7 @@ def search():
         if (
             query in patient["name"].lower()
             or query in patient["symptoms"].lower()
-            or query in patient["language"].lower()
+            or query in (patient["language"] or "").lower()
         )
     ]
     return jsonify(matches)
@@ -997,13 +903,13 @@ def clear_chat():
 def notifications():
     alerts = []
     for patient in patient_queue:
-        if patient["result"]["esi"] in ["ESI-1", "ESI-2"]:
+        if patient["result"].get("esi") in ["ESI-1", "ESI-2"]:
             alerts.append({
                 "type": "critical",
                 "patient": patient["name"],
                 "message": "Critical patient waiting."
             })
-        if patient["result"]["confidence"] < 0.60:
+        if patient["result"].get("confidence", 1.0) < 0.60:
             alerts.append({
                 "type": "low_confidence",
                 "patient": patient["name"],
@@ -1023,7 +929,7 @@ def dashboard():
         "treatment": len(active_beds),
         "alerts": len([
             p for p in patient_queue
-            if p["result"]["esi"] in ["ESI-1", "ESI-2"]
+            if p["result"].get("esi") in ["ESI-1", "ESI-2"]
         ]),
         "audit_events": len(audit_log)
     })
@@ -1060,11 +966,6 @@ def wipe_all_data():
     return jsonify({"message": "All patient data wiped."})
 
 # =========================
-# ERROR HANDLER
-# =========================
-
-
-# =========================
 # PATIENT FLAG
 # =========================
 
@@ -1093,10 +994,6 @@ def flag_patient():
 @app.errorhandler(Exception)
 def handle_error(error):
     return jsonify({"error": str(error)}), 500
-
-# =========================
-# START SERVER
-# =========================
 
 if __name__ == "__main__":
     load_patients()
