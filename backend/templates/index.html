@@ -880,7 +880,6 @@ svg {
         <div class="analyticsCard"><h3>Oldest Wait (min)</h3><div class="big-number" id="oldestWait">—</div></div>
         <div class="analyticsCard"><h3>Avg Confidence</h3><div class="big-number" id="avgConfidence">—</div></div>
         <div class="analyticsCard"><h3>Avg Treatment (min)</h3><div class="big-number" id="avgTreatment">—</div></div>
-        <div class="analyticsCard"><h3>Highest Priority</h3><div id="highestPriority" style="margin-top:8px"></div></div>
         <div class="analyticsCard"><h3>Languages</h3><div id="languages" style="margin-top:8px"></div></div>
         <div class="analyticsCard"><h3>ESI Distribution</h3><div id="esiDistribution" style="margin-top:8px"></div></div>
       </div>
@@ -2055,10 +2054,6 @@ async function loadAnalytics(){
     setText("oldestWait",data.oldest_wait);
     setText("avgConfidence",(data.average_confidence*100).toFixed(0)+"%");
     setText("avgTreatment",data.average_treatment_minutes);
-    const hp=data.highest_priority;
-    document.getElementById("highestPriority").innerHTML=hp
-      ?`<strong>${hp.name}</strong><br><span class="badge ${esiClass(hp.esi)}">${hp.esi}</span> <span style="color:var(--text-dim);font-size:12px">${hp.waiting_minutes}m</span>`
-      :"None";
     document.getElementById("languages").innerHTML=Object.entries(data.languages||{}).map(([l,c])=>`<span class="badge tag">${l}: ${c}</span>`).join("");
     document.getElementById("esiDistribution").innerHTML=Object.entries(data.esi_distribution||{}).map(([e,c])=>`<span class="badge ${esiClass(e)}">${e}: ${c}</span>`).join("");
   } catch(e){ console.error(e); }
