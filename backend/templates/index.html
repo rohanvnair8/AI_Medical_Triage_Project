@@ -68,93 +68,8 @@
             min-height: 100vh;
             overflow-x: hidden;
             transition: background .4s ease, color .4s ease;
-        }
 
-        /* ============================================================
-   PARALLAX BLOBS (shared)
-============================================================ */
-        .blob {
-            position: fixed;
-            border-radius: 50%;
-            filter: blur(110px);
-            opacity: var(--blob-opacity, .55);
-            z-index: 0;
-            pointer-events: none;
-            will-change: transform;
-            transition: transform .05s linear, opacity .4s ease;
-        }
-
-        .blob1 {
-            width: 460px;
-            height: 460px;
-            background: var(--a1);
-            left: -160px;
-            top: -160px;
-        }
-
-        .blob2 {
-            width: 560px;
-            height: 560px;
-            background: var(--a2);
-            right: -180px;
-            bottom: -180px;
-        }
-
-        .blob3 {
-            width: 360px;
-            height: 360px;
-            background: var(--a3);
-            top: 40%;
-            left: 38%;
-        }
-
-        .blob4 {
-            width: 300px;
-            height: 300px;
-            background: var(--a1);
-            top: 75%;
-            right: 8%;
-        }
-
-        .blob5 {
-            width: 260px;
-            height: 260px;
-            background: var(--a2);
-            top: 8%;
-            left: 55%;
-        }
-
-        /* ============================================================
-   LANDING PAGE
-============================================================ */
-        #landing {
-            position: fixed;
-            inset: 0;
-            z-index: 500;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .landing-bg {
-            position: absolute;
-            inset: 0;
-            z-index: 0;
-            background:
-                radial-gradient(ellipse 80% 60% at 20% 20%, rgba(59, 130, 246, .35) 0%, transparent 60%),
-                radial-gradient(ellipse 70% 50% at 80% 80%, rgba(124, 58, 237, .35) 0%, transparent 60%),
-                radial-gradient(ellipse 60% 40% at 50% 10%, rgba(6, 182, 212, .2) 0%, transparent 50%),
-                #020617;
-        }
-
-        /* animated mesh grid */
-        .landing-grid {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            opacity: .08;
+            /* subtle grid backdrop (previously part of removed music UI) */
             background-image:
                 linear-gradient(rgba(255, 255, 255, .15) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, .15) 1px, transparent 1px);
@@ -1665,7 +1580,9 @@
         <div class="orb orb4"></div>
 
         <div class="landing-content">
-            <div class="landing-badge">🏥 Emergency Department AI Platform</div>
+            <div class="landing-badge"><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-hospital"></use>
+                </svg>Emergency Department AI Platform</div>
 
             <h1 class="landing-title">
                 <span class="grad">MedAI<br>Triage</span>
@@ -1715,245 +1632,386 @@
     <!-- ============================================================
      MAIN APP
 ============================================================ -->
+    <!-- SVG icon sprite (white-outline style) -->
+    <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden;" focusable="false">
+        <symbol id="icon-hospital" viewBox="0 0 24 24">
+            <rect x="3" y="6" width="18" height="13" rx="1" ry="1" stroke="currentColor" fill="none" stroke-width="1.5">
+            </rect>
+            <rect x="7" y="10" width="3" height="3" stroke="currentColor" fill="none" stroke-width="1.5"></rect>
+            <rect x="14" y="10" width="3" height="3" stroke="currentColor" fill="none" stroke-width="1.5"></rect>
+            <path d="M12 7v6" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M10 9h4" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-alert" viewBox="0 0 24 24">
+            <path d="M12 3l9 16H3L12 3z" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linejoin="round" />
+            <path d="M12 9v4" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round" />
+            <circle cx="12" cy="17" r="1" fill="currentColor" />
+        </symbol>
+        <symbol id="icon-mic" viewBox="0 0 24 24">
+            <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3z" stroke="currentColor" fill="none"
+                stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            <path d="M19 11v1a7 7 0 0 1-14 0v-1" stroke="currentColor" fill="none" stroke-width="1.6"
+                stroke-linecap="round" />
+            <path d="M12 19v3" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-microscope" viewBox="0 0 24 24">
+            <path d="M13 10l-2 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M9 15l4-4" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M2 20h20" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M6 18c2-3 6-3 8-1" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-volume" viewBox="0 0 24 24">
+            <path d="M3 11v2h4l5 4V7L7 11H3z" stroke="currentColor" fill="none" stroke-width="1.5"
+                stroke-linejoin="round" />
+            <path d="M16 8a4 4 0 0 1 0 8" stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-robot" viewBox="0 0 24 24">
+            <rect x="5" y="7" width="14" height="10" rx="2" stroke="currentColor" fill="none" stroke-width="1.5" />
+            <path d="M8 12h.01M16 12h.01" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+            <path d="M9 4v3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+            <rect x="10" y="3" width="4" height="2" rx="1" stroke="currentColor" fill="none" stroke-width="1.5" />
+        </symbol>
+        <symbol id="icon-trash" viewBox="0 0 24 24">
+            <path d="M3 6h18" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" />
+            <path d="M8 6v12a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" stroke="currentColor" fill="none" stroke-width="1.5"
+                stroke-linecap="round" />
+            <path d="M10 11v5M14 11v5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-bolt" viewBox="0 0 24 24">
+            <path d="M13 2L3 14h7l-1 8 10-12h-7l1-8z" stroke="currentColor" fill="none" stroke-width="1.5"
+                stroke-linejoin="round" />
+        </symbol>
+        <symbol id="icon-x" viewBox="0 0 24 24">
+            <path d="M6 6l12 12M6 18L18 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-refresh" viewBox="0 0 24 24">
+            <path d="M20 12a8 8 0 1 0-2.3 5.3" stroke="currentColor" fill="none" stroke-width="1.5"
+                stroke-linecap="round" />
+            <path d="M20 4v6h-6" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-clock" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" fill="none" stroke-width="1.4" />
+            <path d="M12 7v6l4 2" stroke="currentColor" fill="none" stroke-width="1.5" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-globe" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" stroke="currentColor" fill="none" stroke-width="1.4" />
+            <path d="M2 12h20M12 2v20M5 5c3 6 3 12 7 17" stroke="currentColor" fill="none" stroke-width="1"
+                stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-bed" viewBox="0 0 24 24">
+            <path d="M3 10h14v5H3z" stroke="currentColor" fill="none" stroke-width="1.4" />
+            <path d="M17 10v5M5 15v4M19 15v4" stroke="currentColor" stroke-width="1.4" />
+        </symbol>
+        <symbol id="icon-note" viewBox="0 0 24 24">
+            <rect x="4" y="3" width="16" height="18" rx="2" stroke="currentColor" fill="none" stroke-width="1.4" />
+            <path d="M8 8h8M8 12h8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-check" viewBox="0 0 24 24">
+            <path d="M20 6L9 17l-5-5" stroke="currentColor" fill="none" stroke-width="1.6" stroke-linecap="round"
+                stroke-linejoin="round" />
+        </symbol>
+        <symbol id="icon-dot-red" viewBox="0 0 8 8">
+            <circle cx="4" cy="4" r="3" fill="#ef4444" />
+        </symbol>
+        <symbol id="icon-dot-yellow" viewBox="0 0 8 8">
+            <circle cx="4" cy="4" r="3" fill="#f59e0b" />
+        </symbol>
+        <symbol id="icon-dot-black" viewBox="0 0 8 8">
+            <circle cx="4" cy="4" r="3" fill="#000" />
+        </symbol>
+        <symbol id="icon-heart" viewBox="0 0 24 24">
+            <path
+                d="M12 21s-7-4.35-9.2-6.56C-0.4 10.8 4 6 7.6 8.6 9 10 12 11 12 11s3-1 4.4-2.4C20 6 24.4 10.8 21.2 14.44 19 16.65 12 21 12 21z"
+                stroke="currentColor" fill="none" stroke-width="1.4" />
+        </symbol>
+        <symbol id="icon-brain" viewBox="0 0 24 24">
+            <path d="M6 12c0-3 2-5 6-5s6 2 6 5v2c0 3-2 5-6 5s-6-2-6-5v-2z" stroke="currentColor" fill="none"
+                stroke-width="1.4" />
+            <path d="M9 9v6M15 9v6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-lungs" viewBox="0 0 24 24">
+            <path d="M8 3c0 3-1 4-1 7 0 3 2 5 4 7v3" stroke="currentColor" fill="none" stroke-width="1.4"
+                stroke-linecap="round" />
+            <path d="M16 3c0 3 1 4 1 7 0 3-2 5-4 7v3" stroke="currentColor" fill="none" stroke-width="1.4"
+                stroke-linecap="round" />
+            <path d="M12 2v6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-stomach" viewBox="0 0 24 24">
+            <path d="M7 8c0-2 2-4 5-4s5 2 5 4v3c0 3-2 5-5 5s-5-2-5-5V8z" stroke="currentColor" fill="none"
+                stroke-width="1.4" />
+        </symbol>
+        <symbol id="icon-bone" viewBox="0 0 24 24">
+            <path
+                d="M4 8a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM20 8a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM4 16a2 2 0 1 1 0-4 2 2 0 0 1 0 4zM20 16a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM7 12l10 0"
+                stroke="currentColor" fill="none" stroke-width="1.4" stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-fever" viewBox="0 0 24 24">
+            <path d="M12 2v8l-3-2v6l3-2 3 2v-6l-3 2V2z" stroke="currentColor" fill="none" stroke-width="1.4"
+                stroke-linecap="round" />
+        </symbol>
+        <symbol id="icon-palette" viewBox="0 0 24 24">
+            <path
+                d="M12 3a9 9 0 1 0 9 9c0-1.6-.5-3.1-1.4-4.4-.5-.7-1.5-.9-2.3-.5-.9.5-2.1.1-2.6-.8-.6-1.1-.5-2.5.2-3.6C14.8 3.4 13.5 3 12 3z"
+                stroke="currentColor" fill="none" stroke-width="1.4" />
+            <circle cx="9" cy="9" r="1" fill="currentColor" />
+            <circle cx="14" cy="8" r="1" fill="currentColor" />
+            <circle cx="16" cy="13" r="1" fill="currentColor" />
+        </symbol>
+    </svg>
+
+    <style>
+        .icon {
+            width: 1em;
+            height: 1em;
+            vertical-align: middle;
+            display: inline-block;
+            color: currentColor;
+        }
+
+        .icon svg,
+        .icon use {
+            display: block;
+        }
+
+        .icon-inline {
+            width: 1.15em;
+            height: 1.15em;
+            margin-right: 8px;
+        }
+    </style>
+
     <div id="app">
         <div class="container">
 
             <div class="app-header">
-                <div class="app-logo">🏥 MedAI Triage</div>
-                <div id="criticalBanner">🚨 <span id="criticalBannerText"></span></div>
+                <div class="app-logo"><svg class="icon icon-inline" aria-hidden="true">
+                        <use xlink:href="#icon-hospital"></use>
+                    </svg>MedAI Triage</div>
+                <div id="criticalBanner"><svg class="icon icon-inline" aria-hidden="true">
+                        <use xlink:href="#icon-alert"></use>
+                    </svg> <span id="criticalBannerText"></span></div>
             </div>
 
-            <!-- TABS -->
-            <div class="tabBar">
-                <div class="tab active" onclick="switchTab('intake')">Patient Intake</div>
-                <div class="tab" onclick="switchTab('queue')">Live Queue</div>
-                <div class="tab" onclick="switchTab('beds')">Active Beds</div>
-                <div class="tab" onclick="switchTab('analytics')">Analytics</div>
-                <div class="tab" onclick="switchTab('chatbot')">Medical Chatbot</div>
-                <div class="tab" onclick="switchTab('audit')">Archive</div>
+            <!-- Background music UI removed -->
+        </div>
+
+        <label>Patient Name</label>
+        <input id="name" placeholder="Patient name" style="padding:9px 12px;margin-bottom:8px">
+        <label>Age</label>
+        <input id="age" placeholder="Age" type="number" style="width:120px;padding:9px 12px;margin-bottom:8px">
+
+        <label>Preferred Language</label>
+        <div class="lang-wrap">
+            <input id="langSearch" placeholder="Type to search language…" autocomplete="off" oninput="filterLanguages()"
+                onfocus="openLangDropdown()" onblur="setTimeout(closeLangDropdown,180)">
+            <input type="hidden" id="language" value="English">
+            <div class="lang-dropdown" id="langDropdown"></div>
+        </div>
+
+        <label>Symptoms</label>
+        <textarea id="symptoms" placeholder="Describe symptoms or press the microphone button to speak…"></textarea>
+
+        <div class="buttonRow">
+            <button class="btn-red" onclick="startVoiceInput()"><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-mic"></use>
+                </svg>Speak</button>
+            <button onclick="processTriage()"><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-microscope"></use>
+                </svg>Analyze Patient</button>
+        </div>
+        <div id="voiceStatus"></div>
+        <div id="status"></div>
+
+        <section class="glass">
+            <h2>Picture Symptom Selector</h2>
+            <p>Tap one or more symptoms to add them.</p>
+            <div id="symptomIcons" class="symptomGrid"></div>
+        </section>
+
+        <section id="resultCard" class="glass hidden">
+            <h2>AI Analysis</h2>
+            <div class="infoGrid">
+                <div class="infoCard">
+                    <h3>ESI Level</h3>
+                    <div id="esiLabel"></div>
+                </div>
+                <div class="infoCard">
+                    <h3>Confidence</h3>
+                    <p id="confidence"></p>
+                </div>
+                <div class="infoCard">
+                    <h3>Human Review</h3>
+                    <p id="humanReview"></p>
+                </div>
+                <div class="infoCard">
+                    <h3>Est. Wait</h3>
+                    <p id="waitTime"></p>
+                </div>
             </div>
+            <hr>
+            <h3>Translation</h3>
+            <p id="translation"></p>
+            <h3>Clinical Rationale</h3>
+            <p id="rationale"></p>
+            <h3>Patient Instructions</h3>
+            <p id="instructions"></p>
+            <button class="btn-purple" style="margin-top:12px" onclick="speakInstructions()"><svg
+                    class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-volume"></use>
+                </svg>Read Aloud</button>
+            <hr>
+            <h3>Alerts</h3>
+            <div id="alerts"></div>
+            <h3>Anatomy</h3>
+            <div id="anatomy"></div>
+            <h3>Vitals</h3>
+            <div id="vitals"></div>
+            <h3>Allergies</h3>
+            <div id="allergies"></div>
+            <h3>Medications</h3>
+            <div id="medications"></div>
+        </section>
+    </div>
 
-            <!-- TAB: INTAKE -->
-            <div id="tab-intake" class="tabPanel active">
-                <section class="glass">
-                    <h2>Patient Intake</h2>
-
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-                        <div>
-                            <label>Patient Name</label>
-                            <input id="name" placeholder="Full name">
-                        </div>
-                        <div>
-                            <label>Age (optional)</label>
-                            <input id="age" type="number" min="0" max="130" placeholder="e.g. 45">
-                        </div>
-                    </div>
-
-                    <label>Preferred Language</label>
-                    <div class="lang-wrap">
-                        <input id="langSearch" placeholder="Type to search language…" autocomplete="off"
-                            oninput="filterLanguages()" onfocus="openLangDropdown()"
-                            onblur="setTimeout(closeLangDropdown,180)">
-                        <input type="hidden" id="language" value="English">
-                        <div class="lang-dropdown" id="langDropdown"></div>
-                    </div>
-
-                    <label>Symptoms</label>
-                    <textarea id="symptoms" placeholder="Describe symptoms or press 🎤 to speak…"></textarea>
-
-                    <div class="buttonRow">
-                        <button class="btn-red" onclick="startVoiceInput()">🎤 Speak</button>
-                        <button onclick="processTriage()">🔬 Analyze Patient</button>
-                    </div>
-                    <div id="voiceStatus"></div>
-                    <div id="status"></div>
-                </section>
-
-                <section class="glass">
-                    <h2>Picture Symptom Selector</h2>
-                    <p>Tap one or more symptoms to add them.</p>
-                    <div id="symptomIcons" class="symptomGrid"></div>
-                </section>
-
-                <section id="resultCard" class="glass hidden">
-                    <h2>AI Analysis</h2>
-                    <div class="infoGrid">
-                        <div class="infoCard">
-                            <h3>ESI Level</h3>
-                            <div id="esiLabel"></div>
-                        </div>
-                        <div class="infoCard">
-                            <h3>Confidence</h3>
-                            <p id="confidence"></p>
-                        </div>
-                        <div class="infoCard">
-                            <h3>Human Review</h3>
-                            <p id="humanReview"></p>
-                        </div>
-                        <div class="infoCard">
-                            <h3>Est. Wait</h3>
-                            <p id="waitTime"></p>
-                        </div>
-                    </div>
-                    <hr>
-                    <h3>Translation</h3>
-                    <p id="translation"></p>
-                    <h3>Clinical Rationale</h3>
-                    <p id="rationale"></p>
-                    <h3>Patient Instructions</h3>
-                    <p id="instructions"></p>
-                    <button class="btn-purple" style="margin-top:12px" onclick="speakInstructions()">🔊 Read
-                        Aloud</button>
-                    <hr>
-                    <h3>Alerts</h3>
-                    <div id="alerts"></div>
-                    <h3>Anatomy</h3>
-                    <div id="anatomy"></div>
-                    <h3>Vitals</h3>
-                    <div id="vitals"></div>
-                    <h3>Allergies</h3>
-                    <div id="allergies"></div>
-                    <h3>Medications</h3>
-                    <div id="medications"></div>
-                </section>
+    <!-- TAB: QUEUE -->
+    <div id="tab-queue" class="tabPanel">
+        <section class="glass">
+            <div class="sectionHeader">
+                <h2>Live Waiting Queue</h2>
+                <div class="buttonRow" style="margin-top:0">
+                    <input id="searchInput" placeholder="Search…" style="width:190px;padding:9px 13px">
+                    <button class="btn-sm" onclick="searchPatients()">Search</button>
+                    <button class="btn-sm" onclick="loadQueue()">↻ Refresh</button>
+                </div>
             </div>
+            <div id="queue"></div>
+        </section>
+    </div>
 
-            <!-- TAB: QUEUE -->
-            <div id="tab-queue" class="tabPanel">
-                <section class="glass">
-                    <div class="sectionHeader">
-                        <h2>Live Waiting Queue</h2>
-                        <div class="buttonRow" style="margin-top:0">
-                            <input id="searchInput" placeholder="Search…" style="width:190px;padding:9px 13px">
-                            <button class="btn-sm" onclick="searchPatients()">Search</button>
-                            <button class="btn-sm" onclick="loadQueue()">↻ Refresh</button>
-                        </div>
-                    </div>
-                    <div id="queue"></div>
-                </section>
+    <!-- TAB: BEDS -->
+    <div id="tab-beds" class="tabPanel">
+        <section class="glass">
+            <div class="sectionHeader">
+                <h2>Patients In Treatment</h2>
+                <button class="btn-sm" onclick="loadBeds()">↻ Refresh</button>
             </div>
+            <div id="beds"></div>
+        </section>
+    </div>
 
-            <!-- TAB: BEDS -->
-            <div id="tab-beds" class="tabPanel">
-                <section class="glass">
-                    <div class="sectionHeader">
-                        <h2>Patients In Treatment</h2>
-                        <button class="btn-sm" onclick="loadBeds()">↻ Refresh</button>
-                    </div>
-                    <div id="beds"></div>
-                </section>
+    <!-- TAB: ANALYTICS -->
+    <div id="tab-analytics" class="tabPanel">
+        <section class="glass">
+            <div class="sectionHeader">
+                <h2>Analytics Dashboard</h2>
+                <button class="btn-sm" onclick="loadAnalytics()">↻ Refresh</button>
             </div>
-
-            <!-- TAB: ANALYTICS -->
-            <div id="tab-analytics" class="tabPanel">
-                <section class="glass">
-                    <div class="sectionHeader">
-                        <h2>Analytics Dashboard</h2>
-                        <button class="btn-sm" onclick="loadAnalytics()">↻ Refresh</button>
-                    </div>
-                    <div class="analyticsGrid">
-                        <div class="analyticsCard">
-                            <h3>Waiting</h3>
-                            <div class="big-number" id="patientsWaiting">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>In Treatment</h3>
-                            <div class="big-number" id="patientsInTreatment">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Critical</h3>
-                            <div class="big-number" id="criticalCases">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Discharged</h3>
-                            <div class="big-number" id="patientsDischarge">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Avg Wait (min)</h3>
-                            <div class="big-number" id="avgWait">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Oldest Wait (min)</h3>
-                            <div class="big-number" id="oldestWait">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Avg Confidence</h3>
-                            <div class="big-number" id="avgConfidence">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Avg Treatment (min)</h3>
-                            <div class="big-number" id="avgTreatment">—</div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Highest Priority</h3>
-                            <div id="highestPriority" style="margin-top:8px"></div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>Languages</h3>
-                            <div id="languages" style="margin-top:8px"></div>
-                        </div>
-                        <div class="analyticsCard">
-                            <h3>ESI Distribution</h3>
-                            <div id="esiDistribution" style="margin-top:8px"></div>
-                        </div>
-                    </div>
-                </section>
-                <section class="glass">
-                    <div class="sectionHeader">
-                        <h2>Notifications</h2><button class="btn-sm" onclick="loadNotifications()">↻ Refresh</button>
-                    </div>
-                    <div id="notificationsList"></div>
-                </section>
+            <div class="analyticsGrid">
+                <div class="analyticsCard">
+                    <h3>Waiting</h3>
+                    <div class="big-number" id="patientsWaiting">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>In Treatment</h3>
+                    <div class="big-number" id="patientsInTreatment">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Critical</h3>
+                    <div class="big-number" id="criticalCases">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Discharged</h3>
+                    <div class="big-number" id="patientsDischarge">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Avg Wait (min)</h3>
+                    <div class="big-number" id="avgWait">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Oldest Wait (min)</h3>
+                    <div class="big-number" id="oldestWait">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Avg Confidence</h3>
+                    <div class="big-number" id="avgConfidence">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Avg Treatment (min)</h3>
+                    <div class="big-number" id="avgTreatment">—</div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Highest Priority</h3>
+                    <div class="big-number" id="highestPriority"
+                        style="margin-top:8px;font-size:1.05rem;line-height:1.3;color:var(--text-main);"></div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>Languages</h3>
+                    <div id="languages" style="margin-top:8px"></div>
+                </div>
+                <div class="analyticsCard">
+                    <h3>ESI Distribution</h3>
+                    <div id="esiDistribution" style="margin-top:8px"></div>
+                </div>
             </div>
+        </section>
+    </div>
 
-            <!-- TAB: CHATBOT -->
-            <div id="tab-chatbot" class="tabPanel">
-                <section class="glass">
-                    <div class="sectionHeader">
-                        <h2>🤖 Medical Chatbot</h2>
-                        <button class="btn-gray btn-sm" onclick="clearChat()">Clear</button>
-                    </div>
-                    <p style="color:var(--text-faint);font-size:13px;margin-bottom:16px">Ask about patients, the queue,
-                        timelines, priorities, or clinical guidance. The chatbot has full context of all active
-                        patients.</p>
-                    <div id="chatMessages"></div>
-                    <div class="buttonRow">
-                        <input id="chatInput" placeholder="Ask anything about the current patients…"
-                            onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
-                        <button onclick="sendChat()">Send</button>
-                    </div>
-                </section>
+    <!-- TAB: CHATBOT -->
+    <div id="tab-chatbot" class="tabPanel">
+        <section class="glass">
+            <div class="sectionHeader">
+                <h2><svg class="icon icon-inline" aria-hidden="true">
+                        <use xlink:href="#icon-robot"></use>
+                    </svg>Medical Chatbot</h2>
+                <button class="btn-gray btn-sm" onclick="clearChat()">Clear</button>
             </div>
-
-            <!-- TAB: ARCHIVE -->
-            <div id="tab-audit" class="tabPanel">
-                <section class="glass">
-                    <div class="sectionHeader">
-                        <h2>Audit Log</h2><button class="btn-sm" onclick="loadAudit()">↻ Refresh</button>
-                    </div>
-                    <div id="auditList"></div>
-                </section>
-                <section class="glass">
-                    <div class="sectionHeader">
-                        <h2>Discharged Archive</h2><button class="btn-sm" onclick="loadArchive()">↻ Refresh</button>
-                    </div>
-                    <div id="archiveList"></div>
-                </section>
-                <section class="glass" style="border-color:rgba(239,68,68,.35)">
-                    <h2 style="color:#fca5a5">⚠ Danger Zone</h2>
-                    <p style="margin-bottom:16px">This permanently deletes every patient record, queue entry, bed
-                        assignment, audit event, and chat history. This cannot be undone.</p>
-                    <button class="btn-red" onclick="confirmWipeData()">🗑 Wipe All Patient Data</button>
-                </section>
+            <p style="color:var(--text-faint);font-size:13px;margin-bottom:16px">Ask about patients, the queue,
+                timelines, priorities, or clinical guidance. The chatbot has full context of all active
+                patients.</p>
+            <div id="chatMessages"></div>
+            <div class="buttonRow">
+                <input id="chatInput" placeholder="Ask anything about the current patients…"
+                    onkeydown="if(event.key==='Enter')sendChat()" style="flex:1">
+                <button onclick="sendChat()">Send</button>
             </div>
+        </section>
+    </div>
 
-        </div><!-- /container -->
+    <!-- TAB: ARCHIVE -->
+    <div id="tab-audit" class="tabPanel">
+        <section class="glass">
+            <div class="sectionHeader">
+                <h2>Audit Log</h2><button class="btn-sm" onclick="loadAudit()">↻ Refresh</button>
+            </div>
+            <div id="auditList"></div>
+        </section>
+        <section class="glass">
+            <div class="sectionHeader">
+                <h2>Discharged Archive</h2><button class="btn-sm" onclick="loadArchive()">↻ Refresh</button>
+            </div>
+            <div id="archiveList"></div>
+        </section>
+        <section class="glass" style="border-color:rgba(239,68,68,.35)">
+            <h2 style="color:#fca5a5"><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-alert"></use>
+                </svg>Danger Zone</h2>
+            <p style="margin-bottom:16px">This permanently deletes every patient record, queue entry, bed
+                assignment, audit event, and chat history. This cannot be undone.</p>
+            <button class="btn-red" onclick="confirmWipeData()"><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-trash"></use>
+                </svg>Wipe All Patient Data</button>
+        </section>
+    </div>
+
+    </div><!-- /container -->
     </div><!-- /app -->
 
     <!-- MODAL: WIPE CONFIRM -->
     <div id="wipeModal" class="modal-backdrop">
         <div class="modal" style="border-color:rgba(239,68,68,.4)">
-            <h2 style="color:#fca5a5">⚠ Wipe All Patient Data?</h2>
+            <h2 style="color:#fca5a5"><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-alert"></use>
+                </svg>Wipe All Patient Data?</h2>
             <p style="margin-bottom:10px">This will permanently delete:</p>
             <p style="margin-bottom:4px">• Every patient in the queue and in treatment</p>
             <p style="margin-bottom:4px">• The full discharged archive</p>
@@ -1972,7 +2030,9 @@
     <!-- MODAL: OVERRIDE -->
     <div id="overrideModal" class="modal-backdrop">
         <div class="modal">
-            <h2>⚡ ESI Override</h2>
+            <h2><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-bolt"></use>
+                </svg>ESI Override</h2>
             <input type="hidden" id="overridePatientId">
             <label>Doctor Name</label>
             <input id="overrideDoctor" placeholder="Dr. Smith">
@@ -1993,93 +2053,84 @@
         </div>
     </div>
 
-    <!-- MODAL: RECHECK -->
-    <div id="recheckModal" class="modal-backdrop">
-        <div class="modal">
-            <h2>🔄 Re-Triage</h2>
-            <input type="hidden" id="recheckPatientId">
-            <label>Updated Symptoms</label>
-            <textarea id="recheckSymptoms" style="min-height:110px"></textarea>
-            <div class="modal-actions">
-                <button class="btn-gray" onclick="closeModal('recheckModal')">Cancel</button>
-                <button class="btn-orange" onclick="submitRecheck()">Re-Analyze</button>
-            </div>
+    <!-- Background music feature removed -->
+
+    <!-- Flag buttons -->
+    <div style="margin-bottom:16px">
+        <div style="font-size:12px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">
+            PATIENT STATUS</div>
+        <div class="flagBtns">
+            <button class="flag-btn fb-priority" onclick="setFlag('priority')"><svg class="icon icon-inline"
+                    aria-hidden="true">
+                    <use xlink:href="#icon-dot-red"></use>
+                </svg>Priority</button>
+            <button class="flag-btn fb-extended" onclick="setFlag('extended')"><svg class="icon icon-inline"
+                    aria-hidden="true">
+                    <use xlink:href="#icon-dot-yellow"></use>
+                </svg>Extended Stay</button>
+            <button class="flag-btn fb-deceased" onclick="setFlag('deceased')"><svg class="icon icon-inline"
+                    aria-hidden="true">
+                    <use xlink:href="#icon-dot-black"></use>
+                </svg>Deceased</button>
+            <button class="flag-btn fb-clear" onclick="setFlag('')"><svg class="icon icon-inline" aria-hidden="true">
+                    <use xlink:href="#icon-x"></use>
+                </svg>Clear</button>
         </div>
     </div>
 
-    <!-- MODAL: NOTES -->
-    <div id="notesModal" class="modal-backdrop">
-        <div class="modal">
-            <h2>📝 Treatment Notes</h2>
-            <input type="hidden" id="notesPatientId">
-            <label>Notes</label>
-            <textarea id="notesText" style="min-height:130px"></textarea>
-            <div class="modal-actions">
-                <button class="btn-gray" onclick="closeModal('notesModal')">Cancel</button>
-                <button class="btn-green" onclick="submitNotes()">Save</button>
-            </div>
+    <!-- Action buttons -->
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
+        <button class="btn-purple btn-sm" id="panelOverrideBtn" onclick="openOverrideFromPanel()"><svg
+                class="icon icon-inline" aria-hidden="true">
+                <use xlink:href="#icon-bolt"></use>
+            </svg>Override ESI</button>
+        <button class="btn-orange btn-sm" id="panelRecheckBtn" onclick="openRecheckFromPanel()"><svg
+                class="icon icon-inline" aria-hidden="true">
+                <use xlink:href="#icon-refresh"></use>
+            </svg>Re-Triage</button>
+        <button class="btn-green  btn-sm" id="panelBedBtn" onclick="moveToBedFromPanel()"><svg class="icon icon-inline"
+                aria-hidden="true">
+                <use xlink:href="#icon-bed"></use>
+            </svg>Move to Bed</button>
+        <button class="btn-sm" id="panelNotesBtn" onclick="openNotesFromPanel()"><svg class="icon icon-inline"
+                aria-hidden="true">
+                <use xlink:href="#icon-note"></use>
+            </svg>Notes</button>
+        <button class="btn-red    btn-sm" id="panelDischargeBtn" onclick="dischargeFromPanel()"
+            style="display:none"><svg class="icon icon-inline" aria-hidden="true">
+                <use xlink:href="#icon-check"></use>
+            </svg>Discharge</button>
+    </div>
+
+    <hr style="margin-bottom:18px">
+
+    <!-- Condition Log -->
+    <div class="conditionLogForm">
+        <h3 style="margin-top:0;margin-bottom:10px;font-size:14px"><svg class="icon icon-inline" aria-hidden="true">
+                <use xlink:href="#icon-note"></use>
+            </svg>Log Current Condition</h3>
+        <textarea id="conditionNote" style="min-height:80px;font-size:13px"
+            placeholder="Symptoms, vitals, observations…"></textarea>
+        <div style="margin-top:10px">
+            <button class="btn-green btn-sm" onclick="submitConditionLog()">Add to Timeline</button>
         </div>
     </div>
 
-    <!-- PATIENT DETAIL PANEL -->
-    <div id="patientPanel">
-        <div class="patientPanelInner">
-            <button class="panelClose" onclick="closePatientPanel()">✕</button>
-
-            <div style="margin-bottom:18px">
-                <h2 id="panelName" style="margin-bottom:6px;font-size:1.5rem"></h2>
-                <div id="panelMeta" style="color:var(--text-faint);font-size:13px"></div>
-                <div id="panelBadges" style="margin-top:10px"></div>
-            </div>
-
-            <!-- Flag buttons -->
-            <div style="margin-bottom:16px">
-                <div
-                    style="font-size:12px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">
-                    PATIENT STATUS</div>
-                <div class="flagBtns">
-                    <button class="flag-btn fb-priority" onclick="setFlag('priority')">🔴 Priority</button>
-                    <button class="flag-btn fb-extended" onclick="setFlag('extended')">🟡 Extended Stay</button>
-                    <button class="flag-btn fb-deceased" onclick="setFlag('deceased')">⚫ Deceased</button>
-                    <button class="flag-btn fb-clear" onclick="setFlag('')">✕ Clear</button>
-                </div>
-            </div>
-
-            <!-- Action buttons -->
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px">
-                <button class="btn-purple btn-sm" id="panelOverrideBtn" onclick="openOverrideFromPanel()">⚡ Override
-                    ESI</button>
-                <button class="btn-orange btn-sm" id="panelRecheckBtn" onclick="openRecheckFromPanel()">🔄
-                    Re-Triage</button>
-                <button class="btn-green  btn-sm" id="panelBedBtn" onclick="moveToBedFromPanel()">🛏 Move to
-                    Bed</button>
-                <button class="btn-sm" id="panelNotesBtn" onclick="openNotesFromPanel()">📝 Notes</button>
-                <button class="btn-red    btn-sm" id="panelDischargeBtn" onclick="dischargeFromPanel()"
-                    style="display:none">✓ Discharge</button>
-            </div>
-
-            <hr style="margin-bottom:18px">
-
-            <!-- Condition Log -->
-            <div class="conditionLogForm">
-                <h3 style="margin-top:0;margin-bottom:10px;font-size:14px">📝 Log Current Condition</h3>
-                <textarea id="conditionNote" style="min-height:80px;font-size:13px"
-                    placeholder="Symptoms, vitals, observations…"></textarea>
-                <div style="margin-top:10px">
-                    <button class="btn-green btn-sm" onclick="submitConditionLog()">Add to Timeline</button>
-                </div>
-            </div>
-
-            <!-- Timeline -->
-            <h3 style="margin-top:22px;margin-bottom:4px">Patient Timeline</h3>
-            <div class="timelineTrack" id="panelTimeline"></div>
-        </div>
+    <!-- Timeline -->
+    <h3 style="margin-top:22px;margin-bottom:4px">Patient Timeline</h3>
+    <div class="timelineTrack" id="panelTimeline"></div>
+    </div>
     </div>
 
     <!-- THEME FAB -->
-    <button id="themeFab" onclick="toggleThemePanel()" title="Customize">🎨</button>
+    <button id="themeFab" onclick="toggleThemePanel()" title="Customize"><svg class="icon icon-inline"
+            aria-hidden="true">
+            <use xlink:href="#icon-palette"></use>
+        </svg></button>
     <div id="themePanel">
-        <h3>🎨 Customize</h3>
+        <h3><svg class="icon icon-inline" aria-hidden="true">
+                <use xlink:href="#icon-palette"></use>
+            </svg>Customize</h3>
 
         <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">
             BACKGROUND MODE</div>
@@ -2139,40 +2190,7 @@
         <div id="savedPresetsList"></div>
     </div>
 
-    <!-- MUSIC FAB -->
-    <button id="musicFab" onclick="toggleMusicPanel()" title="Background Music">🎵</button>
-    <div id="musicPanel">
-        <h3>🎵 Background Music</h3>
-
-        <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">
-            UPLOAD TRACK (MP3 / WAV)</div>
-        <input type="file" id="musicFileInput" accept=".mp3,.wav,audio/mpeg,audio/wav" onchange="uploadMusicFile()"
-            style="font-size:12px;padding:9px 10px">
-        <div id="musicUploadStatus" style="font-size:12px;margin-top:8px"></div>
-
-        <hr style="margin:14px 0">
-
-        <div style="font-size:11px;color:var(--text-faint);margin-bottom:8px;font-weight:600;letter-spacing:.05em">
-            PLAYLIST</div>
-        <div id="musicTrackList"></div>
-
-        <div id="musicNowPlaying"
-            style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border-soft)">
-            <div style="font-size:12.5px;font-weight:600;margin-bottom:8px" id="musicCurrentName"></div>
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-                <button class="btn-sm" id="musicPlayBtn" onclick="toggleMusicPlay()" style="padding:7px 12px">▶</button>
-                <input type="range" id="musicVolume" min="0" max="100" value="40" oninput="setMusicVolume()"
-                    style="flex:1">
-            </div>
-            <label
-                style="display:flex;align-items:center;gap:6px;margin-top:0;font-size:11.5px;color:var(--text-muted);cursor:pointer">
-                <input type="checkbox" id="musicLoop" checked onchange="setMusicLoop()" style="width:auto">
-                Loop
-            </label>
-        </div>
-    </div>
-
-    <audio id="bgAudioPlayer" preload="none"></audio>
+    <!-- Background music UI and elements removed -->
 
     <script>
 
@@ -2657,11 +2675,11 @@
                 return;
             }
             container.innerHTML = names.map(n => `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--surface-soft);border-radius:10px;margin-bottom:6px">
-      <span style="font-size:12.5px;cursor:pointer;flex:1" onclick="applySavedPreset('${escH(n)}')">⭐ ${n}</span>
-      <button class="btn-sm btn-red" style="padding:4px 9px" onclick="deleteSavedPreset('${escH(n)}')">✕</button>
-    </div>
-  `).join("");
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;background:var(--surface-soft);border-radius:10px;margin-bottom:6px">
+            <span style="font-size:12.5px;cursor:pointer;flex:1" onclick="applySavedPreset('${escH(n)}')">⭐ ${n}</span>
+            <button class="btn-sm btn-red" style="padding:4px 9px" onclick="deleteSavedPreset('${escH(n)}')"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-x"></use></svg></button>
+        </div>
+    `).join("");
         }
 
         function initTheme() {
@@ -2698,127 +2716,7 @@
             if (panel.classList.contains("open") && !panel.contains(e.target) && e.target !== fab) panel.classList.remove("open");
         });
 
-        /* ================================================================
-           BACKGROUND MUSIC
-        ================================================================ */
-        let musicTracks = [];
-        let currentTrackId = null;
-        const audioEl = document.getElementById("bgAudioPlayer");
-
-        function toggleMusicPanel() { document.getElementById("musicPanel").classList.toggle("open"); }
-
-        document.addEventListener("click", e => {
-            const panel = document.getElementById("musicPanel"), fab = document.getElementById("musicFab");
-            if (panel.classList.contains("open") && !panel.contains(e.target) && e.target !== fab) panel.classList.remove("open");
-        });
-
-        async function loadMusicTracks() {
-            try {
-                musicTracks = await fetch(`${API}/music/list`).then(r => r.json());
-                renderMusicTrackList();
-            } catch (e) { console.error("Music list error:", e); }
-        }
-
-        function renderMusicTrackList() {
-            const c = document.getElementById("musicTrackList");
-            if (!musicTracks.length) {
-                c.innerHTML = `<p style="color:var(--text-faint);font-size:12px">No tracks yet — upload one above.</p>`;
-                return;
-            }
-            c.innerHTML = musicTracks.map(t => `
-    <div class="musicTrack ${t.id === currentTrackId ? 'active' : ''}" onclick="playTrack('${escH(t.id)}','${escH(t.name)}')">
-      <span class="musicTrackName">${t.id === currentTrackId ? '🎵 ' : ''}${t.name}</span>
-      <button class="btn-sm btn-red" style="padding:4px 9px" onclick="event.stopPropagation();deleteTrack('${escH(t.id)}')">✕</button>
-    </div>
-  `).join("");
-        }
-
-        async function uploadMusicFile() {
-            const input = document.getElementById("musicFileInput");
-            const file = input.files[0];
-            if (!file) return;
-
-            const statusEl = document.getElementById("musicUploadStatus");
-            statusEl.innerHTML = `<span style="color:#fbbf24">⏳ Uploading…</span>`;
-
-            const formData = new FormData();
-            formData.append("file", op);
-
-            try {
-                const res = await fetch(`${API}/music/upload`, { method: "POST", body: formData });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || "Upload failed");
-                statusEl.innerHTML = `<span style="color:#22c55e">✓ Uploaded "${data.name}"</span>`;
-                input.value = "";
-                await loadMusicTracks();
-            } catch (e) {
-                statusEl.innerHTML = `<span style="color:#ef4444">✗ ${e.message}</span>`;
-            }
-        }
-
-        function playTrack(id, name) {
-            const track = musicTracks.find(t => t.id === id);
-            if (!track) return;
-
-            currentTrackId = id;
-            audioEl.src = track.url;
-            audioEl.loop = document.getElementById("musicLoop").checked;
-            audioEl.volume = (document.getElementById("musicVolume").value || 40) / 100;
-            audioEl.play().catch(() => { }); // autoplay may be blocked until user gesture; this IS a user gesture though
-
-            document.getElementById("musicNowPlaying").style.display = "block";
-            document.getElementById("musicCurrentName").innerText = name;
-            document.getElementById("musicPlayBtn").innerText = "⏸";
-            document.getElementById("musicFab").classList.add("playing");
-
-            renderMusicTrackList();
-        }
-
-        function toggleMusicPlay() {
-            if (!audioEl.src) return;
-            if (audioEl.paused) {
-                audioEl.play().catch(() => { });
-                document.getElementById("musicPlayBtn").innerText = "⏸";
-                document.getElementById("musicFab").classList.add("playing");
-            } else {
-                audioEl.pause();
-                document.getElementById("musicPlayBtn").innerText = "▶";
-                document.getElementById("musicFab").classList.remove("playing");
-            }
-        }
-
-        function setMusicVolume() {
-            audioEl.volume = document.getElementById("musicVolume").value / 100;
-        }
-
-        function setMusicLoop() {
-            audioEl.loop = document.getElementById("musicLoop").checked;
-        }
-
-        async function deleteTrack(id) {
-            if (!confirm("Delete this track?")) return;
-            try {
-                await fetch(`${API}/music/delete`, {
-                    method: "POST", headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ id })
-                });
-                if (currentTrackId === id) {
-                    audioEl.pause();
-                    audioEl.src = "";
-                    currentTrackId = null;
-                    document.getElementById("musicNowPlaying").style.display = "none";
-                    document.getElementById("musicFab").classList.remove("playing");
-                }
-                await loadMusicTracks();
-            } catch (e) { alert("Error deleting track: " + e.message); }
-        }
-
-        audioEl.addEventListener("ended", () => {
-            if (!audioEl.loop) {
-                document.getElementById("musicPlayBtn").innerText = "▶";
-                document.getElementById("musicFab").classList.remove("playing");
-            }
-        });
+        /* Background music feature removed */
 
         /* ================================================================
            LANGUAGE SEARCH
@@ -2895,10 +2793,10 @@
             if (isProcessing) return;
             isProcessing = true;
             try {
-                const name = document.getElementById("name").value.trim();
-                const language = document.getElementById("language").value || "English";
-                const symptoms = document.getElementById("symptoms").value.trim();
-                const age = document.getElementById("age").value ? parseInt(document.getElementById("age").value) : null;
+                const name = document.getElementById("name")?.value?.trim() || "";
+                const language = document.getElementById("language")?.value || "English";
+                const symptoms = document.getElementById("symptoms")?.value?.trim() || "";
+                const age = document.getElementById("age")?.value ? parseInt(document.getElementById("age").value) : null;
                 if (!name) { setError("Please enter a patient name."); isProcessing = false; return; }
                 if (!symptoms) { setError("Please enter symptoms."); isProcessing = false; return; }
                 setLoading("Analyzing with AI…");
@@ -2910,7 +2808,7 @@
                 const data = await res.json();
                 latestResult = data;
                 renderResult(data);
-                setSuccess("Analysis complete ✓");
+                setSuccess("Analysis complete");
                 loadQueue(); loadAnalytics(); checkCriticalBanner();
             } catch (err) { console.error(err); setError(err.message); }
             finally { isProcessing = false; }
@@ -2920,7 +2818,7 @@
             document.getElementById("resultCard").classList.remove("hidden");
             document.getElementById("esiLabel").innerHTML = `<span class="badge ${esiClass(data.esi)}">${data.esi_label || data.esi || "?"}</span>`;
             document.getElementById("confidence").innerText = data.confidence != null ? (data.confidence * 100).toFixed(0) + "%" : "—";
-            document.getElementById("humanReview").innerText = data.requires_human_review ? "⚠ Yes" : "No";
+            document.getElementById("humanReview").innerHTML = data.requires_human_review ? `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-alert"></use></svg> Yes` : "No";
             document.getElementById("waitTime").innerText = data.wait_time_estimate || "—";
             document.getElementById("translation").innerText = data.translation || "—";
             document.getElementById("rationale").innerText = data.rationale || "—";
@@ -2943,19 +2841,19 @@
             if (selectedLangNoVoice) {
                 rec.lang = "en-US";
                 document.getElementById("voiceStatus").innerHTML =
-                    `⚠ No voice recognition for ${selectedLanguage} — listening in English, or type symptoms directly.`;
+                    `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-alert"></use></svg> No voice recognition for ${selectedLanguage} — listening in English, or type symptoms directly.`;
             } else {
                 rec.lang = lang ? lang[1] : "en-US";
             }
             rec.interimResults = true; rec.maxAlternatives = 1; rec.continuous = false;
-            rec.onstart = () => { if (!selectedLangNoVoice) document.getElementById("voiceStatus").innerHTML = "🎤 Listening…"; };
+            rec.onstart = () => { if (!selectedLangNoVoice) document.getElementById("voiceStatus").innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-mic"></use></svg> Listening…`; };
             rec.onresult = (e) => { let t = ""; for (let i = 0; i < e.results.length; i++) t += e.results[i][0].transcript; document.getElementById("symptoms").value = t; };
             rec.onerror = (e) => { document.getElementById("voiceStatus").innerHTML = "Error: " + e.error; isProcessing = false; };
             rec.onend = () => {
-                const s = document.getElementById("symptoms").value.trim();
-                const n = document.getElementById("name").value.trim();
-                if (s && n) { document.getElementById("voiceStatus").innerHTML = "✓ Captured. Analyzing…"; processTriage(); }
-                else document.getElementById("voiceStatus").innerHTML = s ? "✓ Captured. Press Analyze when ready." : "No speech detected.";
+                const s = document.getElementById("symptoms")?.value?.trim() || "";
+                const n = document.getElementById("name")?.value?.trim() || "";
+                if (s && n) { document.getElementById("voiceStatus").innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg> Captured. Analyzing…`; processTriage(); }
+                else document.getElementById("voiceStatus").innerHTML = s ? `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg> Captured. Press Analyze when ready.` : "No speech detected.";
             };
             rec.start();
         }
@@ -2968,9 +2866,9 @@
         /* ================================================================
            STATUS
         ================================================================ */
-        function setLoading(t) { document.getElementById("status").innerHTML = `<p class="loading">⏳ ${t}</p>`; }
-        function setSuccess(t) { document.getElementById("status").innerHTML = `<p class="success">✓ ${t}</p>`; }
-        function setError(t) { document.getElementById("status").innerHTML = `<p class="error">✗ ${t}</p>`; }
+        function setLoading(t) { document.getElementById("status").innerHTML = `<p class="loading"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-refresh"></use></svg> ${t}</p>`; }
+        function setSuccess(t) { document.getElementById("status").innerHTML = `<p class="success"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg> ${t}</p>`; }
+        function setError(t) { document.getElementById("status").innerHTML = `<p class="error"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-x"></use></svg> ${t}</p>`; }
 
         /* ================================================================
            HELPERS
@@ -2978,7 +2876,13 @@
         function badge(list, cls) { if (!list || !list.length) return `<span class="badge info">None</span>`; return list.map(i => `<span class="badge ${cls}">${i}</span>`).join(""); }
         function esiClass(esi) { return { "ESI-1": "esi1", "ESI-2": "esi2", "ESI-3": "esi3", "ESI-4": "esi4", "ESI-5": "esi5" }[esi] || "esi5"; }
         function esiBorder(esi) { return ["ESI-1", "ESI-2"].includes(esi) ? "esi-critical" : esi === "ESI-3" ? "esi-urgent" : ""; }
-        function flagBadge(f) { if (!f) return ""; const m = { "priority": "flag-priority 🔴 Priority", "extended": "flag-extended 🟡 Extended Stay", "deceased": "flag-deceased ⚫ Deceased" }; const v = m[f]; return v ? `<span class="badge ${v.split(' ')[0]}">${v.slice(v.indexOf(' ') + 1)}</span>` : ""; }
+        function flagBadge(f) {
+            if (!f) return "";
+            if (f === 'priority') return `<span class="badge flag-priority"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-dot-red"></use></svg>Priority</span>`;
+            if (f === 'extended') return `<span class="badge flag-extended"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-dot-yellow"></use></svg>Extended Stay</span>`;
+            if (f === 'deceased') return `<span class="badge flag-deceased"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-dot-black"></use></svg>Deceased</span>`;
+            return "";
+        }
         function escH(s) { return (s || "").replace(/'/g, "\\'").replace(/"/g, "&quot;"); }
         function setText(id, v) { const el = document.getElementById(id); if (el) el.innerText = v ?? "—"; }
 
@@ -3003,7 +2907,7 @@
             <span class="badge ${esiClass(esi)}">${esi}</span>
           </div>
         </div>
-        <div class="patientInfo">🕐 ${p.waiting_minutes ?? 0} min &nbsp;|&nbsp; 🌐 ${p.language || "—"}</div>
+                    <div class="patientInfo"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-clock"></use></svg> ${p.waiting_minutes ?? 0} min &nbsp;|&nbsp; <svg class="icon" aria-hidden="true"><use xlink:href="#icon-globe"></use></svg> ${p.language || "—"}</div>
         <div class="patientInfo" style="margin-top:4px">${p.symptoms || ""}</div>
         <div class="patientInfo" style="color:var(--text-dimmer);font-size:11px;margin-top:8px">Tap to open →</div>`;
                     d.addEventListener("click", () => openPatientPanel(p));
@@ -3031,8 +2935,8 @@
             <span class="badge ${esiClass(esi)}">${esi}</span>
           </div>
         </div>
-        <div class="patientInfo">🌐 ${p.language || "—"} &nbsp;|&nbsp; ${p.symptoms || ""}</div>
-        ${p.treatment_notes ? `<div class="patientInfo" style="color:#86efac;margin-top:6px">📝 ${p.treatment_notes}</div>` : ""}
+                    <div class="patientInfo"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-globe"></use></svg> ${p.language || "—"} &nbsp;|&nbsp; ${p.symptoms || ""}</div>
+                    ${p.treatment_notes ? `<div class="patientInfo" style="color:#86efac;margin-top:6px"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-note"></use></svg> ${p.treatment_notes}</div>` : ""}
         <div class="patientInfo" style="color:var(--text-dimmer);font-size:11px;margin-top:8px">Tap to open →</div>`;
                     d.addEventListener("click", () => openPatientPanel(p));
                     c.appendChild(d);
@@ -3106,8 +3010,8 @@
         function buildPanelBadges(p) {
             const esi = p?.result?.esi || "ESI-5";
             return `<span class="badge ${esiClass(esi)}">${esi}</span>`
-                + (p.doctor_override ? `<span class="badge warning" style="margin-left:6px">⚡ Overridden</span>` : "")
-                + (p?.result?.requires_human_review ? `<span class="badge warning" style="margin-left:6px">⚠ Review</span>` : "")
+                + (p.doctor_override ? `<span class="badge warning" style="margin-left:6px"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-bolt"></use></svg>Overridden</span>` : "")
+                + (p?.result?.requires_human_review ? `<span class="badge warning" style="margin-left:6px"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-alert"></use></svg>Review</span>` : "")
                 + (p.patient_flag ? flagBadge(p.patient_flag) : "");
         }
 
@@ -3115,7 +3019,7 @@
             currentPanelPatient = p;
             const isT = p.status === "In Treatment";
             document.getElementById("panelName").textContent = p.name || "Unknown";
-            document.getElementById("panelMeta").textContent = `🌐 ${p.language || "—"}  |  ${p.status}${p.age ? `  |  Age: ${p.age}` : ""} |  Waiting: ${p.waiting_minutes ?? 0} min`;
+            document.getElementById("panelMeta").innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-globe"></use></svg> ${p.language || "—"}  |  ${p.status}${p.age ? `  |  Age: ${p.age}` : ""} |  Waiting: ${p.waiting_minutes ?? 0} min`;
             document.getElementById("panelBadges").innerHTML = buildPanelBadges(p);
             document.getElementById("panelBedBtn").style.display = isT ? "none" : "inline-block";
             document.getElementById("panelOverrideBtn").style.display = isT ? "none" : "inline-block";
@@ -3137,7 +3041,7 @@
             track.innerHTML = hist.map(h => {
                 if (h.type === "condition_log") {
                     const t = h.timestamp ? new Date(h.timestamp).toLocaleString() : "";
-                    return `<div class="tlEntry condition-entry"><div class="tlTime">${t}</div><div class="tlBody">📝 ${h.note}</div></div>`;
+                    return `<div class="tlEntry condition-entry"><div class="tlTime">${t}</div><div class="tlBody"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-note"></use></svg> ${h.note}</div></div>`;
                 }
                 if (h.type === "flag_entry") {
                     const t = h.timestamp ? new Date(h.timestamp).toLocaleString() : "";
@@ -3210,7 +3114,9 @@
                 const c = document.getElementById("symptomIcons"); c.innerHTML = ""; selectedSymptoms = [];
                 data.forEach(s => {
                     const d = document.createElement("div"); d.className = "symptomCard";
-                    d.innerHTML = `<div class="symptomEmoji">${s.emoji}</div><div style="font-size:12px;font-weight:600">${s.name}</div>`;
+                    const iconId = s.icon || s.id || '';
+                    const iconHtml = iconId ? `<svg class="icon" aria-hidden="true"><use xlink:href="#${iconId}"></use></svg>` : '';
+                    d.innerHTML = `<div class="symptomEmoji">${iconHtml}</div><div style="font-size:12px;font-weight:600">${s.name}</div>`;
                     d.onclick = () => {
                         d.classList.toggle("selected");
                         if (d.classList.contains("selected")) selectedSymptoms.push(s.name);
@@ -3229,8 +3135,17 @@
             try {
                 const data = await fetch(`${API}/notifications`).then(r => r.json());
                 const c = document.getElementById("notificationsList");
-                if (!data.length) { c.innerHTML = "<p style='color:var(--text-dim)'>No active notifications.</p>"; return; }
-                c.innerHTML = data.map(a => `<div class="badge ${a.type === 'critical' ? 'warning' : 'info'}" style="display:block;margin:5px 0;padding:9px 15px;border-radius:11px"><strong>${a.patient}</strong> — ${a.message}</div>`).join("");
+                if (!data.length) {
+                    c.innerHTML = `<p style='color:var(--text-dim)'>No active notifications.</p>`;
+                    try {
+                        const summary = await fetch(`${API}/analytics`).then(r => r.json());
+                        c.innerHTML += `<div style='margin-top:12px;color:var(--text-soft);font-size:13px;line-height:1.5'>Current queue: <strong>${summary.patients_waiting}</strong> waiting, <strong>${summary.critical_cases}</strong> critical. Highest priority: <strong>${summary.highest_priority ? summary.highest_priority.name : 'None'}</strong>.</div>`;
+                    } catch (ignored) {
+                        // analytics summary is optional here
+                    }
+                    return;
+                }
+                c.innerHTML = data.map(a => `<div class="badge ${a.type === 'critical' ? 'warning' : 'info'}" style="display:block;margin:5px 0;padding:11px 15px;border-radius:12px;font-size:13px"><strong>${a.patient}</strong> — ${a.message}</div>`).join("");
             } catch (e) { console.error(e); }
         }
 
@@ -3282,7 +3197,13 @@
         function appendChat(role, text) {
             const c = document.getElementById("chatMessages");
             const d = document.createElement("div"); d.className = `chatBubble ${role}`;
-            d.innerText = (role === "user" ? "You: " : "🤖 Chatbot: ") + text;
+            if (role === "user") {
+                d.innerHTML = `<strong>You:</strong> `;
+                d.appendChild(document.createTextNode(text));
+            } else {
+                d.innerHTML = `<svg class="icon" aria-hidden="true"><use xlink:href="#icon-robot"></use></svg><strong>Chatbot:</strong> `;
+                d.appendChild(document.createTextNode(text));
+            }
             c.appendChild(d); c.scrollTop = c.scrollHeight;
         }
 
@@ -3317,7 +3238,7 @@
       <div style="padding:13px 16px;margin:7px 0;background:rgba(255,255,255,.04);border-radius:13px;border-left:4px solid #334155">
         <strong>${p.name}</strong>${p.age ? ` <span style="color:var(--text-dim);font-size:12px">(${p.age}y)</span>` : ""} <span style="color:var(--text-dim);font-size:12px;margin-left:8px">${p.language}</span>
         <p style="margin-top:5px;font-size:12.5px;color:var(--text-faint)">${p.symptoms}</p>
-        ${p.treatment_notes ? `<p style="font-size:12.5px;color:#86efac;margin-top:3px">📝 ${p.treatment_notes}</p>` : ""}
+                ${p.treatment_notes ? `<p style="font-size:12.5px;color:#86efac;margin-top:3px"><svg class="icon" aria-hidden="true"><use xlink:href="#icon-note"></use></svg> ${p.treatment_notes}</p>` : ""}
       </div>`).join("");
             } catch (e) { console.error(e); }
         }
@@ -3377,7 +3298,7 @@
             spawnParticles();
             spawnCodeRain();
             buildLangDropdown("");
-            loadMusicTracks();
+            // background music feature removed
         });
     </script>
 </body>

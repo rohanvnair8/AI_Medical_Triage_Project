@@ -697,13 +697,14 @@ def speak():
 
 @app.route("/symptom_icons")
 def symptom_icons():
+    # Return icon identifiers (referencing the SVG sprite in the frontend)
     return jsonify([
-        {"name": "Chest Pain",         "emoji": "❤️"},
-        {"name": "Headache",           "emoji": "🧠"},
-        {"name": "Breathing Problem",  "emoji": "🫁"},
-        {"name": "Stomach Pain",       "emoji": "🤢"},
-        {"name": "Broken Bone",        "emoji": "🦴"},
-        {"name": "Fever",              "emoji": "🤒"}
+        {"name": "Chest Pain",         "icon": "icon-heart"},
+        {"name": "Headache",           "icon": "icon-brain"},
+        {"name": "Breathing Problem",  "icon": "icon-lungs"},
+        {"name": "Stomach Pain",       "icon": "icon-stomach"},
+        {"name": "Broken Bone",        "icon": "icon-bone"},
+        {"name": "Fever",              "icon": "icon-fever"}
     ])
 
 # =========================
